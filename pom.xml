@@ -29,7 +29,7 @@
         <dependency>
             <groupId>org.jzy3d</groupId>
             <artifactId>jzy3d-api</artifactId>
-            <version>1.0.2</version>
+            <version>1.0.0</version>
         </dependency>
     </dependencies>
 
