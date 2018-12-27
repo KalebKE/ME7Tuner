@@ -1,5 +1,8 @@
+package writer;
+
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import contract.MlhfmFileContract;
 
 import java.io.BufferedWriter;
 import java.io.IOException;

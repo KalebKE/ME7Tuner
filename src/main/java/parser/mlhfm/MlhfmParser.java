@@ -1,3 +1,6 @@
+package parser.mlhfm;
+
+import contract.MlhfmFileContract;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 
@@ -17,7 +20,7 @@ public class MlhfmParser {
         map.put(MlhfmFileContract.KILOGRAM_PER_HOUR_HEADER, new ArrayList<>());
 
         try {
-            Reader in = new FileReader("/Users/kaleb/Desktop/scaling/mlhfm.csv");
+            Reader in = new FileReader("/Users/kaleb/Desktop/open_loop_test/mlhfm.csv");
             Iterable<CSVRecord> records = CSVFormat.RFC4180.withHeader(MlhfmFileContract.MAF_VOLTAGE_HEADER, MlhfmFileContract.KILOGRAM_PER_HOUR_HEADER).parse(in);
             int index = 0;
             for (CSVRecord record : records) {

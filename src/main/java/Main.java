@@ -1,3 +1,5 @@
+import closedloop.ClosedLoopCorrection;
+import openloop.OpenLoopCorrection;
 import org.jzy3d.chart.Chart;
 import org.jzy3d.chart.ChartScene;
 import org.jzy3d.chart.controllers.mouse.camera.AWTCameraMouseController;
@@ -9,6 +11,11 @@ import org.jzy3d.plot3d.primitives.AbstractDrawable;
 import org.jzy3d.plot3d.primitives.Scatter;
 import org.jzy3d.plot3d.rendering.canvas.Quality;
 import org.jzy3d.plot3d.rendering.view.modes.ViewPositionMode;
+import parser.afrLog.AfrLogParser;
+import parser.me7log.Me7LogParser;
+import contract.MlhfmFileContract;
+import parser.mlhfm.MlhfmParser;
+import writer.MlhfmWriter;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,21 +26,31 @@ import java.util.Map;
 public class Main {
     public static void main(String[] args) {
 
-        LogParser logParser = new LogParser();
-        Map<String, List<Double>> logMap = logParser.parseLogFile();
+        Me7LogParser me7LogParser = new Me7LogParser();
+        Map<String, List<Double>> me7Log = me7LogParser.parseLogFile();
 
         MlhfmParser mlhfmParser = new MlhfmParser();
         Map<String, List<Double>> oldMlhfmMap = mlhfmParser.parse();
 
-        ClosedLoopCorrection closedLoopCorrection = new ClosedLoopCorrection();
-        closedLoopCorrection.correct(logMap, oldMlhfmMap);
-        Map<String, List<Double>> newMlhfmMap = closedLoopCorrection.getNewMlhfm();
+        AfrLogParser afrLogParser = new AfrLogParser();
+        Map<String, List<Double>> afrLog = afrLogParser.parse();
 
-        MlhfmWriter mlhfmWriter = new MlhfmWriter();
-        mlhfmWriter.write(newMlhfmMap);
+        OpenLoopCorrection openLoopCorrection = new OpenLoopCorrection();
+        openLoopCorrection.correct(me7Log, oldMlhfmMap, afrLog);
+        Map<String, List<Double>> newMlhfmMap = openLoopCorrection.getNewMlhfm();
 
         plotMlhfm(oldMlhfmMap, newMlhfmMap);
-        plotVoltageStdDev(oldMlhfmMap, closedLoopCorrection.getStdDev());
+        plotVoltageStdDev(oldMlhfmMap, openLoopCorrection.getCorrectedAfrMap());
+
+//        ClosedLoopCorrection closedLoopCorrection = new ClosedLoopCorrection();
+//        closedLoopCorrection.correct(me7Log, oldMlhfmMap);
+//        Map<String, List<Double>> newMlhfmMap = closedLoopCorrection.getNewMlhfm();
+//
+//        MlhfmWriter mlhfmWriter = new MlhfmWriter();
+//        mlhfmWriter.write(newMlhfmMap);
+//
+//        plotMlhfm(oldMlhfmMap, newMlhfmMap);
+//        plotVoltageStdDev(oldMlhfmMap, closedLoopCorrection.getStdDev());
     }
 
     private static void plotMlhfm(Map<String, List<Double>> oldMlhfmMap, Map<String, List<Double>> newMlhfmMap) {

@@ -1,3 +1,7 @@
+package closedloop;
+
+import contract.Me7LogFileContract;
+import contract.MlhfmFileContract;
 import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
@@ -6,7 +10,7 @@ import java.util.*;
 
 public class ClosedLoopCorrection {
 
-    private final int lambdaControlOn = 1;
+    private final int lambdaControlEnabled = 1;
     private final double minThrottleAngle = 0.1;
     private final double minRpm = 700;
     private final double maxStdDev = 0.025;
@@ -31,13 +35,13 @@ public class ClosedLoopCorrection {
             stdDev.put(voltage, new ArrayList<>());
         }
 
-        List<Double> voltages = log.get(LogFileContract.MAF_VOLTAGE_HEADER);
+        List<Double> voltages = log.get(Me7LogFileContract.MAF_VOLTAGE_HEADER);
         List<Double> voltageStdDev = getStandardDeviation(voltages);
-        List<Double> stft = log.get(LogFileContract.STFT_COLUMN_HEADER);
-        List<Double> ltft = log.get(LogFileContract.LTFT_COLUMN_HEADER);
-        List<Double> lambdaControl = log.get(LogFileContract.LAMBDA_CONTROL_ACTIVE_HEADER);
-        List<Double> throttleAngle = log.get(LogFileContract.THROTTLE_PLATE_ANGLE_HEADER);
-        List<Double> rpm = log.get(LogFileContract.RPM_COLUMN_HEADER);
+        List<Double> stft = log.get(Me7LogFileContract.STFT_COLUMN_HEADER);
+        List<Double> ltft = log.get(Me7LogFileContract.LTFT_COLUMN_HEADER);
+        List<Double> lambdaControl = log.get(Me7LogFileContract.LAMBDA_CONTROL_ACTIVE_HEADER);
+        List<Double> throttleAngle = log.get(Me7LogFileContract.THROTTLE_PLATE_ANGLE_HEADER);
+        List<Double> rpm = log.get(Me7LogFileContract.RPM_COLUMN_HEADER);
 
         for (int i = 0; i < stft.size(); i++) {
             double inputVoltage = voltages.get(i);
@@ -48,7 +52,7 @@ public class ClosedLoopCorrection {
 
         for (int i = 0; i < stft.size(); i++) {
             // Closed loop only and not idle
-            if (lambdaControl.get(i) == lambdaControlOn && throttleAngle.get(i) > minThrottleAngle && rpm.get(i) > minRpm && voltageStdDev.get(i) < maxStdDev) {
+            if (lambdaControl.get(i) == lambdaControlEnabled && throttleAngle.get(i) > minThrottleAngle && rpm.get(i) > minRpm && voltageStdDev.get(i) < maxStdDev) {
                 double inputVoltage = voltages.get(i);
                 int index = Math.abs(Collections.binarySearch(mlhfm.get(MlhfmFileContract.MAF_VOLTAGE_HEADER), inputVoltage));
                 double voltageKey = mlhfm.get(MlhfmFileContract.MAF_VOLTAGE_HEADER).get(index);
