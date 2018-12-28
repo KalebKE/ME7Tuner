@@ -4,6 +4,7 @@ import contract.MlhfmFileContract;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -13,14 +14,14 @@ import java.util.List;
 import java.util.Map;
 
 public class MlhfmParser {
-    public Map<String, List<Double>> parse() {
+    public Map<String, List<Double>> parse(File file) {
 
         Map<String, List<Double>> map = new HashMap<>();
         map.put(MlhfmFileContract.MAF_VOLTAGE_HEADER, new ArrayList<>());
         map.put(MlhfmFileContract.KILOGRAM_PER_HOUR_HEADER, new ArrayList<>());
 
         try {
-            Reader in = new FileReader("/Users/kaleb/Desktop/closed_loop_test/mlhfm.csv");
+            Reader in = new FileReader(file.getAbsolutePath());
             Iterable<CSVRecord> records = CSVFormat.RFC4180.withHeader(MlhfmFileContract.MAF_VOLTAGE_HEADER, MlhfmFileContract.KILOGRAM_PER_HOUR_HEADER).parse(in);
             int index = 0;
             for (CSVRecord record : records) {

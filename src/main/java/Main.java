@@ -13,22 +13,28 @@ import org.jzy3d.plot3d.rendering.view.modes.ViewPositionMode;
 import parser.me7log.Me7LogParser;
 import contract.MlhfmFileContract;
 import parser.mlhfm.MlhfmParser;
+import ui.view.MainManager;
 import writer.MlhfmWriter;
 
 import javax.swing.*;
 import java.awt.*;
+import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
 public class Main {
     public static void main(String[] args) {
+        MainManager mainManager = new MainManager();
+        mainManager.start();
+    }
 
+    private static void runTest() {
         Me7LogParser me7LogParser = new Me7LogParser();
         Map<String, List<Double>> me7Log = me7LogParser.parseLogFile(Me7LogParser.LogType.CLOSED_LOOP);
 
         MlhfmParser mlhfmParser = new MlhfmParser();
-        Map<String, List<Double>> oldMlhfmMap = mlhfmParser.parse();
+        Map<String, List<Double>> oldMlhfmMap = mlhfmParser.parse(new File("/Users/kaleb/Desktop/closed_loop_test/mlhfm.csv"));
 
 //        AfrLogParser afrLogParser = new AfrLogParser();
 //        Map<String, List<Double>> afrLog = afrLogParser.parse();
