@@ -11,6 +11,12 @@ import java.io.Reader;
 import java.util.*;
 
 public class Me7LogParser {
+
+    public enum LogType {
+        OPEN_LOOP,
+        CLOSED_LOOP;
+    }
+
     private int timeColumnIndex = -1;
     private int rpmColumnIndex = -1;
     private int stftColumnIndex = -1;
@@ -20,10 +26,10 @@ public class Me7LogParser {
     private int lambdaControlActiveIndex = -1;
     private int requestedLambdaIndex = -1;
 
-    public Map<String, List<Double>> parseLogFile() {
-        Map<String, List<Double>> map = generateMap();
+    public Map<String, List<Double>> parseLogFile(LogType logType) {
+        Map<String, List<Double>> map = generateMap(logType);
 
-        File directory = new File("/Users/kaleb/Desktop/open_loop_test/scaling");
+        File directory = new File("/Users/kaleb/Desktop/closed_loop_test/scaling");
 
         for (File file : directory.listFiles()) {
             resetIndices();
@@ -61,7 +67,7 @@ public class Me7LogParser {
                                 break;
                         }
 
-                        if (headersFound = headersFound()) {
+                        if (headersFound = headersFound(logType)) {
                             break;
                         }
                     }
@@ -80,7 +86,10 @@ public class Me7LogParser {
                         map.get(Me7LogFileContract.MAF_VOLTAGE_HEADER).add(Double.parseDouble(record.get(mafVoltageIndex)));
                         map.get(Me7LogFileContract.THROTTLE_PLATE_ANGLE_HEADER).add(Double.parseDouble(record.get(throttlePlateAngleIndex)));
                         map.get(Me7LogFileContract.LAMBDA_CONTROL_ACTIVE_HEADER).add(Double.parseDouble(record.get(lambdaControlActiveIndex)));
-                        map.get(Me7LogFileContract.REQUESTED_LAMBDA_HEADER).add(Double.parseDouble(record.get(requestedLambdaIndex)));
+
+                        if(logType == LogType.OPEN_LOOP) {
+                            map.get(Me7LogFileContract.REQUESTED_LAMBDA_HEADER).add(Double.parseDouble(record.get(requestedLambdaIndex)));
+                        }
                     }
                 }
             } catch (IOException | ArrayIndexOutOfBoundsException e) {
@@ -102,11 +111,15 @@ public class Me7LogParser {
         requestedLambdaIndex = -1;
     }
 
-    private boolean headersFound() {
-        return timeColumnIndex != -1 && rpmColumnIndex != -1 && stftColumnIndex != -1 && ltftColumnIndex != -1 && mafVoltageIndex != -1 && throttlePlateAngleIndex != -1 && lambdaControlActiveIndex != -1 && requestedLambdaIndex != -1;
+    private boolean headersFound(LogType logType) {
+        if(logType == LogType.OPEN_LOOP) {
+            return timeColumnIndex != -1 && rpmColumnIndex != -1 && stftColumnIndex != -1 && ltftColumnIndex != -1 && mafVoltageIndex != -1 && throttlePlateAngleIndex != -1 && lambdaControlActiveIndex != -1 && requestedLambdaIndex != -1;
+        } else {
+            return timeColumnIndex != -1 && rpmColumnIndex != -1 && stftColumnIndex != -1 && ltftColumnIndex != -1 && mafVoltageIndex != -1 && throttlePlateAngleIndex != -1 && lambdaControlActiveIndex != -1;
+        }
     }
 
-    private Map<String, List<Double>> generateMap() {
+    private Map<String, List<Double>> generateMap(LogType logType) {
         Map<String, List<Double>> map = new HashMap<>();
         map.put(Me7LogFileContract.TIME_COLUMN_HEADER, new ArrayList<>());
         map.put(Me7LogFileContract.RPM_COLUMN_HEADER, new ArrayList<>());
@@ -115,7 +128,10 @@ public class Me7LogParser {
         map.put(Me7LogFileContract.MAF_VOLTAGE_HEADER, new ArrayList<>());
         map.put(Me7LogFileContract.THROTTLE_PLATE_ANGLE_HEADER, new ArrayList<>());
         map.put(Me7LogFileContract.LAMBDA_CONTROL_ACTIVE_HEADER, new ArrayList<>());
-        map.put(Me7LogFileContract.REQUESTED_LAMBDA_HEADER, new ArrayList<>());
+
+        if(logType == LogType.OPEN_LOOP) {
+            map.put(Me7LogFileContract.REQUESTED_LAMBDA_HEADER, new ArrayList<>());
+        }
 
         return map;
     }

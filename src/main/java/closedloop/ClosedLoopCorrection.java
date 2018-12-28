@@ -15,61 +15,97 @@ public class ClosedLoopCorrection {
     private final double minRpm = 700;
     private final double maxStdDev = 0.025;
 
-    private Map<String, List<Double>> newMlhfm = new HashMap<>();
-    private Map<Double, List<Double>> stdDev = new HashMap<>();
+    private Map<String, List<Double>> correctedMlhfm = new HashMap<>();
+    private Map<Double, List<Double>> rawVoltageStdDev = new HashMap<>();
+    private Map<Double, List<Double>> filteredVoltageStdDev = new HashMap<>();
 
-    public Map<String, List<Double>> getNewMlhfm() {
-        return newMlhfm;
+    public Map<String, List<Double>> getCorrectedMlhfm() {
+        return correctedMlhfm;
     }
 
-    public Map<Double, List<Double>> getStdDev() {
-        return stdDev;
+    public Map<Double, List<Double>> getRawVoltageStdDev() {
+        return rawVoltageStdDev;
+    }
+    public Map<Double, List<Double>> getFilteredVoltageStdDev() {
+        return filteredVoltageStdDev;
     }
 
-    public void correct(Map<String, List<Double>> log, Map<String, List<Double>> mlhfm) {
+    public void correct(Map<String, List<Double>> me7Logs, Map<String, List<Double>> mlhfm) {
 
-        Map<Double, List<Double>> correctionError = new HashMap<>();
+        Map<Double, List<Double>> correctionErrorMap = new HashMap<>();
 
         for (Double voltage : mlhfm.get(MlhfmFileContract.MAF_VOLTAGE_HEADER)) {
-            correctionError.put(voltage, new ArrayList<>());
-            stdDev.put(voltage, new ArrayList<>());
+            correctionErrorMap.put(voltage, new ArrayList<>());
+            rawVoltageStdDev.put(voltage, new ArrayList<>());
+            filteredVoltageStdDev.put(voltage, new ArrayList<>());
         }
 
-        List<Double> voltages = log.get(Me7LogFileContract.MAF_VOLTAGE_HEADER);
-        List<Double> voltageStdDev = getStandardDeviation(voltages);
-        List<Double> stft = log.get(Me7LogFileContract.STFT_COLUMN_HEADER);
-        List<Double> ltft = log.get(Me7LogFileContract.LTFT_COLUMN_HEADER);
-        List<Double> lambdaControl = log.get(Me7LogFileContract.LAMBDA_CONTROL_ACTIVE_HEADER);
-        List<Double> throttleAngle = log.get(Me7LogFileContract.THROTTLE_PLATE_ANGLE_HEADER);
-        List<Double> rpm = log.get(Me7LogFileContract.RPM_COLUMN_HEADER);
+        calculateCorrections(correctionErrorMap, me7Logs, mlhfm);
 
-        for (int i = 0; i < stft.size(); i++) {
-            double inputVoltage = voltages.get(i);
-            int index = Math.abs(Collections.binarySearch(mlhfm.get(MlhfmFileContract.MAF_VOLTAGE_HEADER), inputVoltage));
-            double voltageKey = mlhfm.get(MlhfmFileContract.MAF_VOLTAGE_HEADER).get(index);
-            stdDev.get(voltageKey).add(voltageStdDev.get(i));
+        List<Double> correctionErrorList = new ArrayList<>();
+
+        int maxCorrectionIndex = processCorrections(correctionErrorList, correctionErrorMap, mlhfm);
+
+        postProcessCorrections(correctionErrorList, maxCorrectionIndex);
+
+        smooth(correctionErrorList);
+
+        System.out.println(Arrays.toString(correctionErrorList.toArray()));
+
+        applyCorrections(correctionErrorList, mlhfm);
+    }
+
+    private void populateRawVoltageStdDev(List<Double> me7voltageStdDev, List<Double> me7Voltages, Map<String, List<Double>> mlhfm) {
+        for (int i = 0; i < me7Voltages.size(); i++) {
+            double me7Voltage = me7Voltages.get(i);
+            int mlhfmVoltageIndex = Math.abs(Collections.binarySearch(mlhfm.get(MlhfmFileContract.MAF_VOLTAGE_HEADER), me7Voltage));
+            double mlhfmVoltageKey = mlhfm.get(MlhfmFileContract.MAF_VOLTAGE_HEADER).get(mlhfmVoltageIndex);
+            rawVoltageStdDev.get(mlhfmVoltageKey).add(me7voltageStdDev.get(i));
         }
+    }
+
+    private void calculateCorrections(Map<Double, List<Double>> correctionError, Map<String, List<Double>> me7Logs, Map<String, List<Double>> mlhfm) {
+        List<Double> me7Voltages = me7Logs.get(Me7LogFileContract.MAF_VOLTAGE_HEADER);
+        List<Double> me7voltageStdDev = getStandardDeviation(me7Voltages);
+        List<Double> stft = me7Logs.get(Me7LogFileContract.STFT_COLUMN_HEADER);
+        List<Double> ltft = me7Logs.get(Me7LogFileContract.LTFT_COLUMN_HEADER);
+        List<Double> lambdaControl = me7Logs.get(Me7LogFileContract.LAMBDA_CONTROL_ACTIVE_HEADER);
+        List<Double> throttleAngle = me7Logs.get(Me7LogFileContract.THROTTLE_PLATE_ANGLE_HEADER);
+        List<Double> rpm = me7Logs.get(Me7LogFileContract.RPM_COLUMN_HEADER);
+
+        populateRawVoltageStdDev( me7voltageStdDev,  me7Voltages,  mlhfm);
 
         for (int i = 0; i < stft.size(); i++) {
             // Closed loop only and not idle
-            if (lambdaControl.get(i) == lambdaControlEnabled && throttleAngle.get(i) > minThrottleAngle && rpm.get(i) > minRpm && voltageStdDev.get(i) < maxStdDev) {
-                double inputVoltage = voltages.get(i);
-                int index = Math.abs(Collections.binarySearch(mlhfm.get(MlhfmFileContract.MAF_VOLTAGE_HEADER), inputVoltage));
-                double voltageKey = mlhfm.get(MlhfmFileContract.MAF_VOLTAGE_HEADER).get(index);
+            if (lambdaControl.get(i) == lambdaControlEnabled && throttleAngle.get(i) > minThrottleAngle && rpm.get(i) > minRpm && me7voltageStdDev.get(i) < maxStdDev) {
+                // Get every logged voltage
+                double me7Voltage = me7Voltages.get(i);
+                // Look up the corresponding voltage from MLHFM
+                int mlhfmVoltageIndex = Math.abs(Collections.binarySearch(mlhfm.get(MlhfmFileContract.MAF_VOLTAGE_HEADER), me7Voltage));
+                double mlhfmVoltageKey = mlhfm.get(MlhfmFileContract.MAF_VOLTAGE_HEADER).get(mlhfmVoltageIndex);
+
+                // Calculate the error based on LTFT and STFT
                 double stftValue = stft.get(i) - 1;
                 double ltftValue = ltft.get(i) - 1;
-                correctionError.get(voltageKey).add(stftValue + ltftValue);
-                stdDev.get(voltageKey).add(voltageStdDev.get(i));
+
+                // Record the correction.
+                correctionError.get(mlhfmVoltageKey).add(stftValue + ltftValue);
+
+                // Keep track of the standard deviation of the logged voltages relative to the MLHFM voltages
+                filteredVoltageStdDev.get(mlhfmVoltageKey).add(me7voltageStdDev.get(i));
             }
         }
+    }
 
-        List<Double> tempCorrections = new ArrayList<>();
+    private int processCorrections(List<Double> correctionErrorList, Map<Double, List<Double>> correctionErrorMap, Map<String, List<Double>> mlhfm) {
         int maxCorrectionIndex = 0;
         int index = 0;
         Mean mean = new Mean();
         for (Double voltage : mlhfm.get(MlhfmFileContract.MAF_VOLTAGE_HEADER)) {
-            List<Double> corrections = correctionError.get(voltage);
+            List<Double> corrections = correctionErrorMap.get(voltage);
+            // Get the mean of the correction set
             double meanValue = mean.evaluate(toDoubleArray(corrections.toArray(new Double[0])), 0, corrections.size());
+            // Get the mode of the correction set
             double[] mode = StatUtils.mode(toDoubleArray(corrections.toArray(new Double[0])));
 
             double correction = meanValue;
@@ -78,57 +114,66 @@ public class ClosedLoopCorrection {
                 correction += v;
             }
 
+            // Get the average of the mean and the mode
             correction /= 1 + mode.length;
 
+            // Keep track of the largest index a correction was made at
             if (!Double.isNaN(correction)) {
                 maxCorrectionIndex = index;
             }
 
-            tempCorrections.add(correction);
+            correctionErrorList.add(correction);
 
             index++;
         }
 
+        return maxCorrectionIndex;
+    }
+
+    private void postProcessCorrections(List<Double> correctionErrorList, int maxCorrectionIndex) {
         boolean foundStart = false;
         int lastValidCorrectionIndex = -1;
-        for (int i = 0; i < tempCorrections.size(); i++) {
-            Double value = tempCorrections.get(i);
-
+        // Fill in any missing corrections with 0 if it occurs before the first correction or last correction. Fill in
+        // many missing corrections between the first and last correction with the last known correction.
+        for (int i = 0; i < correctionErrorList.size(); i++) {
+            Double value = correctionErrorList.get(i);
             if (value.isNaN() && !foundStart) {
-                tempCorrections.set(i, 0d);
+                correctionErrorList.set(i, 0d);
             } else if (!value.isNaN() && !foundStart) {
                 foundStart = true;
                 lastValidCorrectionIndex = i;
             } else if (value.isNaN()) {
                 if (i < maxCorrectionIndex) {
-                    tempCorrections.set(i, tempCorrections.get(lastValidCorrectionIndex));
+                    correctionErrorList.set(i, correctionErrorList.get(lastValidCorrectionIndex));
                 } else {
-                    tempCorrections.set(i, 0d);
+                    correctionErrorList.set(i, 0d);
                 }
             } else {
                 lastValidCorrectionIndex = i;
             }
         }
+    }
 
+    private void smooth(List<Double> correctionErrorList) {
         // Smooth
-        double[] meanTempCorrections = toDoubleArray(tempCorrections.toArray(new Double[0]));
+        Mean mean = new Mean();
+        double[] meanTempCorrections = toDoubleArray(correctionErrorList.toArray(new Double[0]));
         for(int i = 0; i < meanTempCorrections.length; i++) {
             if(i > 2 && i < meanTempCorrections.length - 2) {
-                tempCorrections.set(i, mean.evaluate(meanTempCorrections, i - 2, 5));
+                correctionErrorList.set(i, mean.evaluate(meanTempCorrections, i - 2, 5));
             }
         }
+    }
 
-        System.out.println(Arrays.toString(tempCorrections.toArray()));
-
+    private void applyCorrections(List<Double> correctionErrorList, Map<String, List<Double>> mlhfm) {
         Map<Double, Double> totalCorrectionError = new HashMap<>();
         List<Double> voltage = mlhfm.get(MlhfmFileContract.MAF_VOLTAGE_HEADER);
 
         for (int i = 0; i < voltage.size(); i++) {
-            totalCorrectionError.put(voltage.get(i), tempCorrections.get(i));
+            totalCorrectionError.put(voltage.get(i), correctionErrorList.get(i));
         }
 
-
-        newMlhfm.put(MlhfmFileContract.MAF_VOLTAGE_HEADER, voltage);
+        correctedMlhfm.put(MlhfmFileContract.MAF_VOLTAGE_HEADER, voltage);
 
         List<Double> oldKgPerHour = mlhfm.get(MlhfmFileContract.KILOGRAM_PER_HOUR_HEADER);
         List<Double> newKgPerHour = new ArrayList<>();
@@ -140,7 +185,7 @@ public class ClosedLoopCorrection {
             newKgPerHour.add(i, oldKgPerHourValue * ((totalCorrectionErrorValue) + 1));
         }
 
-        newMlhfm.put(MlhfmFileContract.KILOGRAM_PER_HOUR_HEADER, newKgPerHour);
+        correctedMlhfm.put(MlhfmFileContract.KILOGRAM_PER_HOUR_HEADER, newKgPerHour);
     }
 
     private double[] toDoubleArray(Double[] array) {
