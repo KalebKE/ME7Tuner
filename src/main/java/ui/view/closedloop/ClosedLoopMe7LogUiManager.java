@@ -13,7 +13,8 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import preferences.ClosedLoopLogFilterPreferences;
 import stddev.StandardDeviation;
-import ui.viewmodel.ClosedLoopLogViewModel;
+import ui.viewmodel.ClosedLoopCorrectionViewModel;
+import ui.viewmodel.ClosedLoopMe7LogViewModel;
 import ui.viewmodel.MlhfmViewModel;
 
 import javax.swing.*;
@@ -24,21 +25,20 @@ import java.util.List;
 import java.util.Map;
 
 
-public class ClosedLoopLogUiManager {
+public class ClosedLoopMe7LogUiManager {
 
     private JFreeChart chart;
     private JPanel closedLoopLogPanel;
     private JLabel fileLabel;
-    private ClosedLoopLogViewModel closedLoopViewModel;
+    private ClosedLoopMe7LogViewModel closedLoopViewModel;
 
     private Map<String, List<Double>> mlhfmMap;
 
-    public ClosedLoopLogUiManager() {
-        closedLoopViewModel = ClosedLoopLogViewModel.getInstance();
+    public ClosedLoopMe7LogUiManager() {
+        closedLoopViewModel = ClosedLoopMe7LogViewModel.getInstance();
         closedLoopViewModel.getPublishSubject().subscribe(new Observer<Map<String, List<Double>>>() {
             @Override
             public void onNext(Map<String, List<Double>> me7LogMap) {
-
                 if(mlhfmMap != null) {
                     drawChart(me7LogMap, mlhfmMap);
                 }
@@ -58,7 +58,7 @@ public class ClosedLoopLogUiManager {
         mlhfmViewModel.getPublishSubject().subscribe(new Observer<Map<String, List<Double>>>() {
             @Override
             public void onNext(Map<String, List<Double>> mlhfmMap) {
-                ClosedLoopLogUiManager.this.mlhfmMap = mlhfmMap;
+                ClosedLoopMe7LogUiManager.this.mlhfmMap = mlhfmMap;
             }
 
             @Override
@@ -158,7 +158,7 @@ public class ClosedLoopLogUiManager {
         JButton button = new JButton("Generate Correction");
 
         button.addActionListener(e -> {
-
+            ClosedLoopCorrectionViewModel.getInstance().generateCorrection();
         });
 
         return button;
@@ -168,13 +168,13 @@ public class ClosedLoopLogUiManager {
         JButton button = new JButton("Configure Filter");
 
         button.addActionListener(e -> {
-            ClosedLoopFilterConfigurationPanel filterConfigPane = new ClosedLoopFilterConfigurationPanel();
+            ClosedLoopMe7LogFilterConfigPanel filterConfigPane = new ClosedLoopMe7LogFilterConfigPanel();
 
             int result = JOptionPane.showConfirmDialog(closedLoopLogPanel, filterConfigPane,
                     "", JOptionPane.OK_CANCEL_OPTION,
                     JOptionPane.PLAIN_MESSAGE);
             if (result == JOptionPane.OK_OPTION) {
-                for (ClosedLoopFilterConfigurationPanel.FieldTitle fieldTitle : ClosedLoopFilterConfigurationPanel.FieldTitle.values()) {
+                for (ClosedLoopMe7LogFilterConfigPanel.FieldTitle fieldTitle : ClosedLoopMe7LogFilterConfigPanel.FieldTitle.values()) {
                     switch (fieldTitle) {
                         case MIN_THROTTLE_ANGLE:
                             ClosedLoopLogFilterPreferences.setMinThrottleAnglePreference(Double.valueOf(filterConfigPane.getFieldText(fieldTitle)));
@@ -214,8 +214,6 @@ public class ClosedLoopLogUiManager {
 
         return button;
     }
-
-
 
     private void initChart() {
         XYSeriesCollection dataset = new XYSeriesCollection();

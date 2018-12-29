@@ -8,7 +8,7 @@ import org.apache.commons.math3.stat.descriptive.moment.Mean;
 
 import java.util.*;
 
-public class OpenLoopCorrection {
+public class OpenLoopCorrectionManager {
     private final int minPointsMe7 = 75;
     private final int minPointsAfr = 150;
     private final double minThrottleAngle = 80;

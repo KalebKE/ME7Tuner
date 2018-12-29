@@ -1,4 +1,4 @@
-package ui.view.closedloop;
+package ui.view;
 
 
 import contract.MlhfmFileContract;
@@ -21,14 +21,14 @@ import java.util.List;
 import java.util.Map;
 
 
-public class MlhfmInputUiManager {
+public class MlhfmUiManager {
 
     private JFreeChart chart;
     private JPanel mlhfmPanel;
     private JLabel fileLabel;
     private MlhfmViewModel mlhfmViewModel;
 
-    public MlhfmInputUiManager() {
+    public MlhfmUiManager() {
         mlhfmViewModel = MlhfmViewModel.getInstance();
         mlhfmViewModel.getPublishSubject().subscribe(new Observer<Map<String, List<Double>>>() {
             @Override
@@ -47,7 +47,7 @@ public class MlhfmInputUiManager {
         });
     }
 
-    JPanel getMlhfmPanel() {
+    public JPanel getMlhfmPanel() {
         initChart();
         mlhfmPanel = new JPanel();
         mlhfmPanel.setLayout(new GridBagLayout());
