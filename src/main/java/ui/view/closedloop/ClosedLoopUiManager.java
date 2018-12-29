@@ -1,19 +1,17 @@
 package ui.view.closedloop;
 
+
 import contract.MlhfmFileContract;
 import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
-import org.jzy3d.chart.Chart;
-import org.jzy3d.chart.ChartScene;
-import org.jzy3d.chart.controllers.mouse.camera.AWTCameraMouseController;
-import org.jzy3d.chart.factories.AWTChartComponentFactory;
-import org.jzy3d.chart.factories.IChartComponentFactory;
-import org.jzy3d.colors.Color;
-import org.jzy3d.maths.Coord3d;
-import org.jzy3d.plot3d.primitives.Scatter;
-import org.jzy3d.plot3d.rendering.canvas.Quality;
-import org.jzy3d.plot3d.rendering.view.modes.ViewPositionMode;
-import parser.mlhfm.MlhfmParser;
+import org.jfree.chart.ChartFactory;
+import org.jfree.chart.ChartPanel;
+import org.jfree.chart.JFreeChart;
+import org.jfree.chart.plot.XYPlot;
+import org.jfree.chart.renderer.AbstractRenderer;
+import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
+import org.jfree.data.xy.XYSeries;
+import org.jfree.data.xy.XYSeriesCollection;
 import ui.viewmodel.MlhfmViewModel;
 
 import javax.swing.*;
@@ -26,7 +24,7 @@ import java.util.Map;
 
 public class ClosedLoopUiManager {
 
-    private Chart chart;
+    private JFreeChart chart;
     private JPanel closeLoopPanel;
     private JLabel fileLabel;
     private MlhfmViewModel viewModel;
@@ -52,7 +50,6 @@ public class ClosedLoopUiManager {
 
     public JPanel getClosedLoopPanel() {
         initChart();
-
         closeLoopPanel = new JPanel();
         closeLoopPanel.setLayout(new BorderLayout());
         closeLoopPanel.add(getTabbedPane(), BorderLayout.CENTER);
@@ -109,25 +106,7 @@ public class ClosedLoopUiManager {
         c.weightx = 1.0;
         c.weighty = 1.0;
 
-        Coord3d[] points = new Coord3d[1];
-
-        for (int i = 0; i < points.length; i++) {
-            Coord3d coord = new Coord3d();
-            points[i] = coord.set(0,0 , 0);
-
-        }
-        Scatter scatterPlot = new Scatter(points, Color.WHITE);
-
-        ChartScene scene = chart.getScene();
-        scene.add(scatterPlot);
-
-        AWTCameraMouseController controller = new AWTCameraMouseController(chart);
-        Component canvas = (Component) chart.getCanvas();
-        canvas.addMouseListener(controller);
-        canvas.addMouseMotionListener(controller);
-        canvas.addMouseWheelListener(controller);
-
-        panel.add(canvas, c);
+        panel.add(new ChartPanel(chart), c);
 
         return panel;
     }
@@ -174,28 +153,38 @@ public class ClosedLoopUiManager {
     }
 
     private void initChart() {
-        chart = AWTChartComponentFactory.chart(Quality.Advanced, IChartComponentFactory.Toolkit.swing);
-        chart.getAxeLayout().setXAxeLabel("Voltage");
-        chart.getAxeLayout().setYAxeLabel("Airflow Kg/Hr");
-        chart.getView().setViewPositionMode(ViewPositionMode.TOP);
+        XYSeriesCollection dataset = new XYSeriesCollection();
+
+        chart = ChartFactory.createScatterPlot(
+                "MHLFM",
+                "Voltage", "kg/hr", dataset);
+
+        XYPlot plot = (XYPlot)chart.getPlot();
+        plot.setBackgroundPaint(java.awt.Color.WHITE);
+
+        XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(true, false);
+        plot.setRenderer(renderer);
+
+        plot.getRenderer().setSeriesPaint(0, Color.BLUE);
+        plot.getRenderer().setSeriesStroke(0, new BasicStroke(
+                0.3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
+                1.0f, new float[] {1f}, 5.0f
+        ));
     }
 
     private void drawChart(Map<String, List<Double>> mlhfmMap) {
         List<Double> voltage = mlhfmMap.get(MlhfmFileContract.MAF_VOLTAGE_HEADER);
         List<Double> kghr = mlhfmMap.get(MlhfmFileContract.KILOGRAM_PER_HOUR_HEADER);
 
-        Coord3d[] points = new Coord3d[voltage.size()];
+        XYSeries series = new XYSeries("MLHFM");
 
         for (int i = 0; i < voltage.size(); i++) {
-            Coord3d coord = new Coord3d();
-            points[i] = coord.set(voltage.get(i).floatValue(), kghr.get(i).floatValue() , 0);
+            series.add(voltage.get(i), kghr.get(i));
         }
 
-        Scatter scatterPlot = new Scatter(points, Color.RED);
-
-        ChartScene scene = chart.getScene();
-        scene.getGraph().getAll().clear();
-        scene.add(scatterPlot, true);
+        XYPlot plot = (XYPlot)chart.getPlot();
+        ((XYSeriesCollection)plot.getDataset()).removeAllSeries();
+        ((XYSeriesCollection)plot.getDataset()).addSeries(series);
     }
 
     private class CSVFileFilter extends FileFilter {

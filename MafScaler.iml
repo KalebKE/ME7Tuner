@@ -29,6 +29,7 @@
         <SOURCES />
       </library>
     </orderEntry>
+    <orderEntry type="library" name="Maven: org.jfree:jfreechart:1.5.0" level="project" />
     <orderEntry type="library" name="Maven: org.jzy3d:jzy3d-api:1.0.0" level="project" />
     <orderEntry type="library" name="Maven: org.jzy3d:jzy3d-jdt-core:1.0.0" level="project" />
     <orderEntry type="library" name="Maven: commons-io:commons-io:2.3" level="project" />
