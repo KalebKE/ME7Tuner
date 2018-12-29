@@ -31,7 +31,7 @@ public class Main {
 
     private static void runTest() {
         Me7LogParser me7LogParser = new Me7LogParser();
-        Map<String, List<Double>> me7Log = me7LogParser.parseLogFile(Me7LogParser.LogType.CLOSED_LOOP);
+        Map<String, List<Double>> me7Log = me7LogParser.parseLogFile(Me7LogParser.LogType.CLOSED_LOOP, new File("/Users/kaleb/Desktop/closed_loop_test/scaling"));
 
         MlhfmParser mlhfmParser = new MlhfmParser();
         Map<String, List<Double>> oldMlhfmMap = mlhfmParser.parse(new File("/Users/kaleb/Desktop/closed_loop_test/mlhfm.csv"));
@@ -51,7 +51,7 @@ public class Main {
         Map<String, List<Double>> newMlhfmMap = closedLoopCorrection.getCorrectedMlhfm();
 
         plotMlhfm(oldMlhfmMap, newMlhfmMap);
-        plotVoltageStdDev(oldMlhfmMap, closedLoopCorrection.getRawVoltageStdDev());
+        //plotVoltageStdDev(oldMlhfmMap, closedLoopCorrection.getRawVoltageStdDev());
 
         MlhfmWriter mlhfmWriter = new MlhfmWriter();
         mlhfmWriter.write(newMlhfmMap);

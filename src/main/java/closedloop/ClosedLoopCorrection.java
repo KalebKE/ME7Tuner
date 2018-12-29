@@ -4,7 +4,9 @@ import contract.Me7LogFileContract;
 import contract.MlhfmFileContract;
 import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
-import org.apache.commons.math3.stat.descriptive.moment.StandardDeviation;
+import preferences.ClosedLoopLogFilterPreferences;
+import stddev.StandardDeviation;
+import util.Util;
 
 import java.util.*;
 
@@ -16,15 +18,10 @@ public class ClosedLoopCorrection {
     private final double maxStdDev = 0.025;
 
     private Map<String, List<Double>> correctedMlhfm = new HashMap<>();
-    private Map<Double, List<Double>> rawVoltageStdDev = new HashMap<>();
     private Map<Double, List<Double>> filteredVoltageStdDev = new HashMap<>();
 
     public Map<String, List<Double>> getCorrectedMlhfm() {
         return correctedMlhfm;
-    }
-
-    public Map<Double, List<Double>> getRawVoltageStdDev() {
-        return rawVoltageStdDev;
     }
     public Map<Double, List<Double>> getFilteredVoltageStdDev() {
         return filteredVoltageStdDev;
@@ -36,7 +33,6 @@ public class ClosedLoopCorrection {
 
         for (Double voltage : mlhfm.get(MlhfmFileContract.MAF_VOLTAGE_HEADER)) {
             correctionErrorMap.put(voltage, new ArrayList<>());
-            rawVoltageStdDev.put(voltage, new ArrayList<>());
             filteredVoltageStdDev.put(voltage, new ArrayList<>());
         }
 
@@ -55,25 +51,14 @@ public class ClosedLoopCorrection {
         applyCorrections(correctionErrorList, mlhfm);
     }
 
-    private void populateRawVoltageStdDev(List<Double> me7voltageStdDev, List<Double> me7Voltages, Map<String, List<Double>> mlhfm) {
-        for (int i = 0; i < me7Voltages.size(); i++) {
-            double me7Voltage = me7Voltages.get(i);
-            int mlhfmVoltageIndex = Math.abs(Collections.binarySearch(mlhfm.get(MlhfmFileContract.MAF_VOLTAGE_HEADER), me7Voltage));
-            double mlhfmVoltageKey = mlhfm.get(MlhfmFileContract.MAF_VOLTAGE_HEADER).get(mlhfmVoltageIndex);
-            rawVoltageStdDev.get(mlhfmVoltageKey).add(me7voltageStdDev.get(i));
-        }
-    }
-
     private void calculateCorrections(Map<Double, List<Double>> correctionError, Map<String, List<Double>> me7Logs, Map<String, List<Double>> mlhfm) {
         List<Double> me7Voltages = me7Logs.get(Me7LogFileContract.MAF_VOLTAGE_HEADER);
-        List<Double> me7voltageStdDev = getStandardDeviation(me7Voltages);
+        List<Double> me7voltageStdDev = StandardDeviation.getStandardDeviation(me7Voltages, ClosedLoopLogFilterPreferences.getStdDevSampleWindowPreference());
         List<Double> stft = me7Logs.get(Me7LogFileContract.STFT_COLUMN_HEADER);
         List<Double> ltft = me7Logs.get(Me7LogFileContract.LTFT_COLUMN_HEADER);
         List<Double> lambdaControl = me7Logs.get(Me7LogFileContract.LAMBDA_CONTROL_ACTIVE_HEADER);
         List<Double> throttleAngle = me7Logs.get(Me7LogFileContract.THROTTLE_PLATE_ANGLE_HEADER);
         List<Double> rpm = me7Logs.get(Me7LogFileContract.RPM_COLUMN_HEADER);
-
-        populateRawVoltageStdDev( me7voltageStdDev,  me7Voltages,  mlhfm);
 
         for (int i = 0; i < stft.size(); i++) {
             // Closed loop only and not idle
@@ -104,9 +89,9 @@ public class ClosedLoopCorrection {
         for (Double voltage : mlhfm.get(MlhfmFileContract.MAF_VOLTAGE_HEADER)) {
             List<Double> corrections = correctionErrorMap.get(voltage);
             // Get the mean of the correction set
-            double meanValue = mean.evaluate(toDoubleArray(corrections.toArray(new Double[0])), 0, corrections.size());
+            double meanValue = mean.evaluate(Util.toDoubleArray(corrections.toArray(new Double[0])), 0, corrections.size());
             // Get the mode of the correction set
-            double[] mode = StatUtils.mode(toDoubleArray(corrections.toArray(new Double[0])));
+            double[] mode = StatUtils.mode(Util.toDoubleArray(corrections.toArray(new Double[0])));
 
             double correction = meanValue;
 
@@ -157,7 +142,7 @@ public class ClosedLoopCorrection {
     private void smooth(List<Double> correctionErrorList) {
         // Smooth
         Mean mean = new Mean();
-        double[] meanTempCorrections = toDoubleArray(correctionErrorList.toArray(new Double[0]));
+        double[] meanTempCorrections = Util.toDoubleArray(correctionErrorList.toArray(new Double[0]));
         for(int i = 0; i < meanTempCorrections.length; i++) {
             if(i > 2 && i < meanTempCorrections.length - 2) {
                 correctionErrorList.set(i, mean.evaluate(meanTempCorrections, i - 2, 5));
@@ -188,31 +173,7 @@ public class ClosedLoopCorrection {
         correctedMlhfm.put(MlhfmFileContract.KILOGRAM_PER_HOUR_HEADER, newKgPerHour);
     }
 
-    private double[] toDoubleArray(Double[] array) {
-        double[] result = new double[array.length];
 
-        for (int i = 0; i < result.length; i++) {
-            result[i] = array[i];
-        }
 
-        return result;
-    }
 
-    private ArrayList<Double> getStandardDeviation(List<Double> values) {
-        int window = 20;
-        StandardDeviation standardDeviation = new StandardDeviation();
-        double[] inputValues = toDoubleArray(values.toArray(new Double[0]));
-        ArrayList<Double> result = new ArrayList<>();
-
-        for (int i = 0; i < values.size(); i++) {
-            if (i < 20 || i >= values.size() - 20) {
-                result.add(i, 0d);
-            } else {
-                double stdDev = standardDeviation.evaluate(inputValues, i, window);
-                result.add(i, stdDev);
-            }
-        }
-
-        return result;
-    }
 }

@@ -13,7 +13,17 @@ public class MlhfmViewModel {
     private MlhfmParser mlhfmParser;
     private PublishSubject<Map<String, List<Double>>> publishSubject;
 
-    public MlhfmViewModel() {
+    private static MlhfmViewModel instance;
+
+    public static MlhfmViewModel getInstance() {
+        if(instance == null) {
+            instance = new MlhfmViewModel();
+        }
+
+        return instance;
+    }
+
+    private MlhfmViewModel() {
         mlhfmParser = new MlhfmParser();
         publishSubject = PublishSubject.create();
     }

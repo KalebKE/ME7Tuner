@@ -14,7 +14,7 @@ public class Me7LogParser {
 
     public enum LogType {
         OPEN_LOOP,
-        CLOSED_LOOP;
+        CLOSED_LOOP
     }
 
     private int timeColumnIndex = -1;
@@ -26,10 +26,8 @@ public class Me7LogParser {
     private int lambdaControlActiveIndex = -1;
     private int requestedLambdaIndex = -1;
 
-    public Map<String, List<Double>> parseLogFile(LogType logType) {
+    public Map<String, List<Double>> parseLogFile(LogType logType, File directory) {
         Map<String, List<Double>> map = generateMap(logType);
-
-        File directory = new File("/Users/kaleb/Desktop/closed_loop_test/scaling");
 
         for (File file : directory.listFiles()) {
             resetIndices();
