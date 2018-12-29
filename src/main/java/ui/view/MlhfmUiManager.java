@@ -11,6 +11,7 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
+import ui.table.MapTable;
 import ui.viewmodel.MlhfmViewModel;
 
 import javax.swing.*;
@@ -27,6 +28,7 @@ public class MlhfmUiManager {
     private JPanel mlhfmPanel;
     private JLabel fileLabel;
     private MlhfmViewModel mlhfmViewModel;
+    private MapTable mapTable;
 
     public MlhfmUiManager() {
         mlhfmViewModel = MlhfmViewModel.getInstance();
@@ -34,6 +36,7 @@ public class MlhfmUiManager {
             @Override
             public void onNext(Map<String, List<Double>> mlhfmMap) {
                 drawChart(mlhfmMap);
+                drawMapTable(mlhfmMap);
             }
 
             @Override
@@ -49,44 +52,56 @@ public class MlhfmUiManager {
 
     public JPanel getMlhfmPanel() {
         initChart();
+        initMapTable();
+
         mlhfmPanel = new JPanel();
         mlhfmPanel.setLayout(new GridBagLayout());
 
         GridBagConstraints c = new GridBagConstraints();
 
-        c.weightx = 1.0;
         c.gridheight = 1;
 
         c.fill = GridBagConstraints.BOTH;
         c.gridx = 0;
         c.gridy = 0;
+        c.weightx = 1;
         c.weighty = 0.95;
         mlhfmPanel.add(getChartPanel(), c);
 
         c.fill = GridBagConstraints.BOTH;
+        c.gridx = 1;
+        c.gridy = 0;
+        c.weightx = 0;
+        c.weighty = 0.95;
+        c.insets = new Insets(0, 8, 0 ,0);
+        mlhfmPanel.add(getMapTablePanel(), c);
+
+        c.fill = GridBagConstraints.BOTH;
         c.gridx = 0;
         c.gridy = 1;
+        c.weightx = 1.0;
         c.weighty = 0.05;
+        c.gridwidth = 2;
+        c.insets = new Insets(0, 0, 0 ,0);
         mlhfmPanel.add(getActionPanel(), c);
 
         return mlhfmPanel;
     }
 
+    private JPanel getMapTablePanel() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBackground(Color.BLUE);
+
+        panel.add(mapTable.getScrollPane());
+
+        return panel;
+    }
+
     private JPanel getChartPanel() {
         JPanel panel = new JPanel();
-        panel.setLayout(new GridBagLayout());
-
-        GridBagConstraints c = new GridBagConstraints();
-
-        c.fill = GridBagConstraints.BOTH;
-        c.gridx = 0;
-        c.gridy = 0;
-        c.gridheight = 1;
-        c.gridwidth = 1;
-        c.weightx = 1.0;
-        c.weighty = 1.0;
-
-        panel.add(new ChartPanel(chart), c);
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.add(new ChartPanel(chart));
 
         return panel;
     }
@@ -150,6 +165,23 @@ public class MlhfmUiManager {
                 0.3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
                 1.0f, new float[] {1f}, 5.0f
         ));
+    }
+
+    private void initMapTable() {
+        mapTable = MapTable.getMapTable(new Double[0], new Double[]{0d}, new Double[0][]);
+    }
+
+    private void drawMapTable(Map<String, List<Double>> mlhfmMap) {
+        List<Double> voltage = mlhfmMap.get(MlhfmFileContract.MAF_VOLTAGE_HEADER);
+        List<Double> kghr = mlhfmMap.get(MlhfmFileContract.KILOGRAM_PER_HOUR_HEADER);
+        Double[][] data = new Double[kghr.size()][1];
+
+        for(int i = 0; i < data.length; i++) {
+            data[i][0] = kghr.get(i);
+        }
+
+        mapTable.setRowHeaders(voltage.toArray(new Double[0]));
+        mapTable.setTableData(data);
     }
 
     private void drawChart(Map<String, List<Double>> mlhfmMap) {

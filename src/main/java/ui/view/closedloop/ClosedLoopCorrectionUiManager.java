@@ -13,6 +13,7 @@ import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import preferences.ClosedLoopLogFilterPreferences;
 import stddev.StandardDeviation;
+import ui.table.MapTable;
 import ui.viewmodel.ClosedLoopCorrectionViewModel;
 import writer.MlhfmWriter;
 
@@ -29,6 +30,7 @@ public class ClosedLoopCorrectionUiManager {
     private JFreeChart stdDevChart;
     private JPanel correctionPanel;
     private ClosedLoopCorrection closedLoopCorrection;
+    private MapTable mapTable;
 
     public ClosedLoopCorrectionUiManager() {
         ClosedLoopCorrectionViewModel closedLoopCorrectionViewModel = ClosedLoopCorrectionViewModel.getInstance();
@@ -39,6 +41,7 @@ public class ClosedLoopCorrectionUiManager {
                 ClosedLoopCorrectionUiManager.this.closedLoopCorrection = closedLoopCorrection;
                 drawMlhfmChart(closedLoopCorrection.inputMlhfm, closedLoopCorrection.correctedMlhfm);
                 drawStdDevChart(closedLoopCorrection.filteredVoltageStdDev, closedLoopCorrection.correctedMlhfm);
+                drawMapTable(closedLoopCorrection.correctedMlhfm);
             }
 
             @Override
@@ -53,7 +56,6 @@ public class ClosedLoopCorrectionUiManager {
     }
 
     JPanel getCorrectionPanel() {
-        initMlhfmChart();
         correctionPanel = new JPanel();
         correctionPanel.setLayout(new GridBagLayout());
 
@@ -86,27 +88,46 @@ public class ClosedLoopCorrectionUiManager {
         return tabbedPane;
     }
 
+    private JPanel getMapTablePanel() {
+        initMapTable();
+        JPanel panel = new JPanel();
+        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
+        panel.setBackground(Color.BLUE);
+
+        panel.add(mapTable.getScrollPane());
+
+        return panel;
+    }
+
     private JPanel getMlhfmChartPanel() {
-        initStdDevChart();
+        initMlhfmChart();
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
 
         GridBagConstraints c = new GridBagConstraints();
 
+        c.gridheight = 1;
+
         c.fill = GridBagConstraints.BOTH;
         c.gridx = 0;
         c.gridy = 0;
-        c.gridheight = 1;
-        c.gridwidth = 1;
-        c.weightx = 1.0;
-        c.weighty = 1.0;
-
+        c.weightx = 1;
+        c.weighty = 0.95;
         panel.add(new ChartPanel(mlfhmChart), c);
+
+        c.fill = GridBagConstraints.BOTH;
+        c.gridx = 1;
+        c.gridy = 0;
+        c.weightx = 0;
+        c.weighty = 0.95;
+        c.insets = new Insets(0, 8, 0 ,0);
+        panel.add(getMapTablePanel(), c);
 
         return panel;
     }
 
     private JPanel getStdDevChartPanel() {
+        initStdDevChart();
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
 
@@ -200,6 +221,23 @@ public class ClosedLoopCorrectionUiManager {
         });
 
         return button;
+    }
+
+    private void initMapTable() {
+        mapTable = MapTable.getMapTable(new Double[0], new Double[]{0d}, new Double[0][]);
+    }
+
+    private void drawMapTable(Map<String, List<Double>> mlhfmMap) {
+        List<Double> voltage = mlhfmMap.get(MlhfmFileContract.MAF_VOLTAGE_HEADER);
+        List<Double> kghr = mlhfmMap.get(MlhfmFileContract.KILOGRAM_PER_HOUR_HEADER);
+        Double[][] data = new Double[kghr.size()][1];
+
+        for(int i = 0; i < data.length; i++) {
+            data[i][0] = kghr.get(i);
+        }
+
+        mapTable.setRowHeaders(voltage.toArray(new Double[0]));
+        mapTable.setTableData(data);
     }
 
     private void drawMlhfmChart(Map<String, List<Double>> inputMlhfmMap, Map<String, List<Double>> correctedMlhfmMap) {
