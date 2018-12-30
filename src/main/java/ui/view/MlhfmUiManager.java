@@ -91,8 +91,6 @@ public class MlhfmUiManager {
     private JPanel getMapTablePanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBackground(Color.BLUE);
-
         panel.add(mapTable.getScrollPane());
 
         return panel;
@@ -168,7 +166,7 @@ public class MlhfmUiManager {
     }
 
     private void initMapTable() {
-        mapTable = MapTable.getMapTable(new Double[0], new Double[]{0d}, new Double[0][]);
+        mapTable = MapTable.getMapTable(new Double[0], new String[]{"kg/hr"}, new Double[0][]);
     }
 
     private void drawMapTable(Map<String, List<Double>> mlhfmMap) {

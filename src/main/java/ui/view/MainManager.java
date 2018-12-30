@@ -8,7 +8,7 @@ public class MainManager {
     public void start() {
         JFrame frame = new JFrame();
         frame.setTitle("MAF Scaler");
-        frame.setSize(800, 800);
+        frame.setSize(1280, 800);
         frame.add(getTabbedPane());
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);

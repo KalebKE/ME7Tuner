@@ -10,13 +10,13 @@ import java.text.DecimalFormat;
 public class MapTable extends JList implements TableModelListener {
     private JTable table;
     private Double[] rowHeaders;
-    private Double[] columnHeaders;
+    private Object[] columnHeaders;
     private Double[][] data;
     private DefaultTableModel tableModel;
     private JScrollPane scrollPane;
 
     @SuppressWarnings("unchecked")
-    private MapTable(Double[] rowHeaders, Double[] columnHeaders, Double[][] data) {
+    private MapTable(Double[] rowHeaders, Object[] columnHeaders, Double[][] data) {
         this.table = this.createTable(columnHeaders, data);
         this.rowHeaders = rowHeaders;
         this.columnHeaders = columnHeaders;
@@ -31,10 +31,10 @@ public class MapTable extends JList implements TableModelListener {
         setOpaque(false);
         setSelectionModel(table.getSelectionModel());
         table.getModel().addTableModelListener(this);
-
         scrollPane = new JScrollPane(table);
         scrollPane.setRowHeaderView(this);
         scrollPane.setMinimumSize(new Dimension(120, 100));
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
     }
 
     public void tableChanged(TableModelEvent e) {
@@ -47,7 +47,7 @@ public class MapTable extends JList implements TableModelListener {
         return data;
     }
 
-    public Double[] getColumnHeaders() {
+    public Object[] getColumnHeaders() {
         return columnHeaders;
     }
 
@@ -117,11 +117,17 @@ public class MapTable extends JList implements TableModelListener {
         return scrollPane;
     }
 
-    private JTable createTable(Double[] columnHeaders, final Double[][] data) {
+    private JTable createTable(Object[] columnHeaders, final Double[][] data) {
         tableModel = new DefaultTableModel(data, columnHeaders) {
             private static final long serialVersionUID = 1L;
             @Override
             public Class<?> getColumnClass(int column) {
+                if(columnHeaders instanceof Double[]) {
+                    return Double.class;
+                } else if(columnHeaders instanceof String[]) {
+                    return String.class;
+                }
+
                 return Double.class;
             }
         };
@@ -154,7 +160,7 @@ public class MapTable extends JList implements TableModelListener {
         return table;
     }
 
-    public static MapTable getMapTable(Double[] rowHeaders, Double[] columnHeaders, final Double[][] data) {
+    public static MapTable getMapTable(Double[] rowHeaders, Object[] columnHeaders, final Double[][] data) {
         return new MapTable(rowHeaders, columnHeaders, data);
     }
 }

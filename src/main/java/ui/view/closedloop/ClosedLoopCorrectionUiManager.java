@@ -224,7 +224,7 @@ public class ClosedLoopCorrectionUiManager {
     }
 
     private void initMapTable() {
-        mapTable = MapTable.getMapTable(new Double[0], new Double[]{0d}, new Double[0][]);
+        mapTable = MapTable.getMapTable(new Double[0], new String[]{"kg/hr"}, new Double[0][]);
     }
 
     private void drawMapTable(Map<String, List<Double>> mlhfmMap) {
