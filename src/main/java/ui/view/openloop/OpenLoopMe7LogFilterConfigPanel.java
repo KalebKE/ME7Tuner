@@ -1,6 +1,6 @@
-package ui.view.closedloop;
+package ui.view.openloop;
 
-import preferences.closedloop.ClosedLoopLogFilterPreferences;
+import preferences.openloop.OpenLoopLogFilterPreferences;
 
 import javax.swing.*;
 import javax.swing.text.NumberFormatter;
@@ -10,15 +10,15 @@ import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.Map;
 
-public class ClosedLoopMe7LogFilterConfigPanel extends JPanel {
+public class OpenLoopMe7LogFilterConfigPanel extends JPanel {
     private static final Insets WEST_INSETS = new Insets(5, 0, 5, 5);
     private static final Insets EAST_INSETS = new Insets(5, 5, 5, 0);
 
     enum FieldTitle {
-        MIN_THROTTLE_ANGLE("Minimum Throttle Angle"), MIN_RPM("Minimum RPM"), MAX_STD_DEV("Max Std Dev"), STD_DEV_SAMPLE_WINDOW("Std Dev Window Size");
+        MIN_THROTTLE_ANGLE("Minimum Throttle Angle"), MIN_RPM("Minimum RPM"), MIN_ME7_POINTS("Minimum ME7 Points"), MIN_AFR_POINTS("Minimum AFR Points"), MAX_AFR("Maximum AFR");
         private String title;
 
-        private FieldTitle(String title) {
+        FieldTitle(String title) {
             this.title = title;
         }
 
@@ -29,10 +29,10 @@ public class ClosedLoopMe7LogFilterConfigPanel extends JPanel {
 
     private Map<FieldTitle, JTextField> fieldMap = new HashMap<FieldTitle, JTextField>();
 
-    ClosedLoopMe7LogFilterConfigPanel() {
+    OpenLoopMe7LogFilterConfigPanel() {
         setLayout(new GridBagLayout());
         setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createTitledBorder("Configure Closed Loop Filter"),
+                BorderFactory.createTitledBorder("Configure Open Loop Filter"),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)));
         GridBagConstraints gbc;
         for (int i = 0; i < FieldTitle.values().length; i++) {
@@ -58,20 +58,23 @@ public class ClosedLoopMe7LogFilterConfigPanel extends JPanel {
             switch (fieldTitle) {
                 case MIN_THROTTLE_ANGLE:
                     textField = new JFormattedTextField(integerFormatter);
-                    textField.setValue(ClosedLoopLogFilterPreferences.getMinThrottleAnglePreference());
+                    textField.setValue(OpenLoopLogFilterPreferences.getMinThrottleAnglePreference());
                     break;
                 case MIN_RPM:
                     textField = new JFormattedTextField(integerFormatter);
-                    textField.setValue(ClosedLoopLogFilterPreferences.getMinRpmPreference());
+                    textField.setValue(OpenLoopLogFilterPreferences.getMinRpmPreference());
                     break;
-                case MAX_STD_DEV:
+                case MIN_ME7_POINTS:
                     textField = new JFormattedTextField(decimalFormatter);
-                    textField.setValue(ClosedLoopLogFilterPreferences.getMaxStdDevPreference());
+                    textField.setValue(OpenLoopLogFilterPreferences.getMinMe7PointsPreference());
                     break;
-                case STD_DEV_SAMPLE_WINDOW:
+                case MIN_AFR_POINTS:
                     textField = new JFormattedTextField(integerFormatter);
-                    textField.setValue(ClosedLoopLogFilterPreferences.getStdDevSampleWindowPreference());
+                    textField.setValue(OpenLoopLogFilterPreferences.getMinAfrPointsPreference());
                     break;
+                case MAX_AFR:
+                    textField = new JFormattedTextField(decimalFormat);
+                    textField.setValue(OpenLoopLogFilterPreferences.getMaxAfrPreference());
             }
 
             textField.setColumns(5);

@@ -4,6 +4,7 @@ import contract.AfrLogFileContract;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVRecord;
 
+import java.io.File;
 import java.io.FileReader;
 import java.io.IOException;
 import java.io.Reader;
@@ -15,7 +16,7 @@ public class AfrLogParser {
     private int tpsColumnIndex = -1;
     private int afrColumnIndex = -1;
 
-    public Map<String, List<Double>> parse() {
+    public Map<String, List<Double>> parse(File file) {
 
         Map<String, List<Double>> map = new HashMap<>();
         map.put(AfrLogFileContract.RPM_HEADER, new ArrayList<>());
@@ -24,7 +25,7 @@ public class AfrLogParser {
 
         try {
             boolean headersFound = false;
-            Reader in = new FileReader("/Users/kaleb/Desktop/open_loop_test/afr.csv");
+            Reader in = new FileReader(file);
             Iterable<CSVRecord> records = CSVFormat.RFC4180.parse(in);
 
             for (CSVRecord record : records) {

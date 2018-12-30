@@ -1,6 +1,7 @@
 package ui.view;
 
 import ui.view.closedloop.ClosedLoopUiManager;
+import ui.view.openloop.OpenLoopUiManager;
 
 import javax.swing.*;
 
@@ -17,7 +18,7 @@ public class MainManager {
     private JTabbedPane getTabbedPane() {
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.addTab("Closed Loop", null, new ClosedLoopUiManager().getClosedLoopPanel(), "Closed Loop Fueling");
-        tabbedPane.addTab("Open Loop", null, new JPanel(), "Open Loop Fueling");
+        tabbedPane.addTab("Open Loop", null, new OpenLoopUiManager().getOpenLoopPanel(), "Open Loop Fueling");
 
         return tabbedPane;
     }

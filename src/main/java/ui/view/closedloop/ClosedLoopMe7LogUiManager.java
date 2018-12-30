@@ -11,10 +11,10 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import preferences.ClosedLoopLogFilterPreferences;
+import preferences.closedloop.ClosedLoopLogFilterPreferences;
 import stddev.StandardDeviation;
-import ui.viewmodel.ClosedLoopCorrectionViewModel;
-import ui.viewmodel.ClosedLoopMe7LogViewModel;
+import ui.viewmodel.closedloop.ClosedLoopCorrectionViewModel;
+import ui.viewmodel.closedloop.ClosedLoopMe7LogViewModel;
 import ui.viewmodel.MlhfmViewModel;
 
 import javax.swing.*;
@@ -33,6 +33,7 @@ public class ClosedLoopMe7LogUiManager {
     private ClosedLoopMe7LogViewModel closedLoopViewModel;
 
     private Map<String, List<Double>> mlhfmMap;
+    private File me7LogFile;
 
     public ClosedLoopMe7LogUiManager() {
         closedLoopViewModel = ClosedLoopMe7LogViewModel.getInstance();
@@ -55,7 +56,7 @@ public class ClosedLoopMe7LogUiManager {
         });
 
         MlhfmViewModel mlhfmViewModel = MlhfmViewModel.getInstance();
-        mlhfmViewModel.getPublishSubject().subscribe(new Observer<Map<String, List<Double>>>() {
+        mlhfmViewModel.getMlhfmPublishSubject().subscribe(new Observer<Map<String, List<Double>>>() {
             @Override
             public void onNext(Map<String, List<Double>> mlhfmMap) {
                 ClosedLoopMe7LogUiManager.this.mlhfmMap = mlhfmMap;
@@ -206,13 +207,17 @@ public class ClosedLoopMe7LogUiManager {
             int returnValue = fc.showOpenDialog(closedLoopLogPanel);
 
             if (returnValue == JFileChooser.APPROVE_OPTION) {
-                File selectedFile = fc.getSelectedFile();
-                closedLoopViewModel.loadFile(selectedFile);
-                fileLabel.setText(selectedFile.getAbsolutePath());
+                this.me7LogFile = fc.getSelectedFile();
+                loadMe7File(this.me7LogFile);
             }
         });
 
         return button;
+    }
+
+    private void loadMe7File(File file) {
+        closedLoopViewModel.loadDirectory(this.me7LogFile );
+        fileLabel.setText(this.me7LogFile.getName());
     }
 
     private void initChart() {

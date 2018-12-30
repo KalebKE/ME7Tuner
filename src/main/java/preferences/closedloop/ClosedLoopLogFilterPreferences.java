@@ -1,4 +1,4 @@
-package preferences;
+package preferences.closedloop;
 
 import java.util.prefs.Preferences;
 

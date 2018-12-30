@@ -1,10 +1,7 @@
-package ui.viewmodel;
+package ui.viewmodel.closedloop;
 
-import closedloop.ClosedLoopCorrection;
-import closedloop.ClosedLoopCorrectionManager;
 import io.reactivex.subjects.PublishSubject;
 import parser.me7log.Me7LogParser;
-import preferences.ClosedLoopLogFilterPreferences;
 
 import java.io.File;
 import java.util.List;
@@ -35,11 +32,11 @@ public class ClosedLoopMe7LogViewModel {
         return publishSubject;
     }
 
-    public void loadFile(File directory) {
+    public void loadDirectory(File directory) {
         CompletableFuture.runAsync(() -> {
             if(directory.isDirectory()) {
                 CompletableFuture.runAsync(() -> {
-                    Map<String, List<Double>> me7LogMap = me7LogParser.parseLogFile(Me7LogParser.LogType.CLOSED_LOOP, directory);
+                    Map<String, List<Double>> me7LogMap = me7LogParser.parseLogDirectory(Me7LogParser.LogType.CLOSED_LOOP, directory);
 
                     if (me7LogMap != null) {
                         publishSubject.onNext(me7LogMap);

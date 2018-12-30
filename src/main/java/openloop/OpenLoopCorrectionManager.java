@@ -3,36 +3,46 @@ package openloop;
 import contract.AfrLogFileContract;
 import contract.Me7LogFileContract;
 import contract.MlhfmFileContract;
+import openloop.util.AfrLogUtil;
+import openloop.util.Me7LogUtil;
 import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
 
 import java.util.*;
 
 public class OpenLoopCorrectionManager {
-    private final int minPointsMe7 = 75;
-    private final int minPointsAfr = 150;
-    private final double minThrottleAngle = 80;
+    private final int minPointsMe7;
+    private final int minPointsAfr;
+    private final double minThrottleAngle;
     private final int lambdaControlEnabled = 0;
-    private final double minRpm = 2000;
-    private final double maxAfr = 15;
+    private final double minRpm;
+    private final double maxAfr;
 
     private Map<String, List<Double>> correctedMlhfm = new HashMap<>();
     private Map<Double, List<Double>> correctedAfrMap = new HashMap<>();
 
-    public void correct(Map<String, List<Double>> me7Log, Map<String, List<Double>> mlhfm, Map<String, List<Double>> afrLog) {
+    private OpenLoopCorrection openLoopCorrection;
 
-        List<Map<String, List<Double>>> me7LogList = findMe7Logs(me7Log);
-        List<Map<String, List<Double>>> afrLogList = findAfrLogs(afrLog);
+    public OpenLoopCorrectionManager(double minThrottleAngle, double minRpm, int minPointsMe7, int minPointsAfr, double maxAfr) {
+        this.minThrottleAngle = minThrottleAngle;
+        this.minRpm = minRpm;
+        this.minPointsMe7 = minPointsMe7;
+        this.minPointsAfr = minPointsAfr;
+        this.maxAfr = maxAfr;
+    }
+
+    public void correct(Map<String, List<Double>> me7Log, Map<String, List<Double>> afrLog, Map<String, List<Double>> mlhfm) {
+
+        List<Map<String, List<Double>>> me7LogList = Me7LogUtil.findMe7Logs(me7Log, minThrottleAngle, lambdaControlEnabled, minRpm, minPointsMe7);
+        List<Map<String, List<Double>>> afrLogList = AfrLogUtil.findAfrLogs(afrLog, minThrottleAngle, minRpm, maxAfr, minPointsAfr);
 
         generateMlhfm(mlhfm, me7LogList, afrLogList);
+
+        openLoopCorrection = new OpenLoopCorrection(mlhfm, correctedMlhfm, correctedAfrMap);
     }
 
-    public Map<String, List<Double>> getCorrectedMlhfm() {
-        return correctedMlhfm;
-    }
-
-    public Map<Double, List<Double>> getCorrectedAfrMap() {
-        return correctedAfrMap;
+    public OpenLoopCorrection getOpenLoopCorrection() {
+        return openLoopCorrection;
     }
 
     private void generateMlhfm(Map<String, List<Double>> mlhfm, List<Map<String, List<Double>>> me7LogList, List<Map<String, List<Double>>> afrLogList) {
@@ -202,108 +212,6 @@ public class OpenLoopCorrectionManager {
         }
 
         return indices;
-    }
-
-    private List<Map<String, List<Double>>> findAfrLogs(Map<String, List<Double>> afrLog) {
-        ArrayList<Map<String, List<Double>>> logList = new ArrayList<>();
-
-        List<Double> throttleAngle = afrLog.get(AfrLogFileContract.TPS_HEADER);
-        List<Double> rpm = afrLog.get(AfrLogFileContract.RPM_HEADER);
-        List<Double> afr = afrLog.get(AfrLogFileContract.AFR_HEADER);
-
-        for (int i = 0; i < throttleAngle.size(); i++) {
-
-            if (throttleAngle.get(i) >= minThrottleAngle && rpm.get(i) >= minRpm && afr.get(i) < maxAfr) {
-                if (isValidLogLength(i, minPointsAfr, throttleAngle)) {
-                    int endOfLog = findEndOfLog(i, throttleAngle);
-                    logList.add(getAfrLog(i, endOfLog, afrLog));
-                    i = endOfLog + 1;
-                }
-            }
-        }
-
-        return logList;
-    }
-
-    private Map<String, List<Double>> getAfrLog(int start, int end, Map<String, List<Double>> afrLog) {
-        List<Double> rpm = afrLog.get(AfrLogFileContract.RPM_HEADER);
-        List<Double> afr = afrLog.get(AfrLogFileContract.AFR_HEADER);
-        List<Double> tps = afrLog.get(AfrLogFileContract.TPS_HEADER);
-
-        Map<String, List<Double>> log = new HashMap<>();
-        log.put(AfrLogFileContract.RPM_HEADER, rpm.subList(start, end));
-        log.put(AfrLogFileContract.AFR_HEADER, afr.subList(start, end));
-        log.put(AfrLogFileContract.TPS_HEADER, tps.subList(start, end));
-
-        return log;
-    }
-
-    private List<Map<String, List<Double>>> findMe7Logs(Map<String, List<Double>> me7Log) {
-        ArrayList<Map<String, List<Double>>> logList = new ArrayList<>();
-
-        List<Double> lambdaControl = me7Log.get(Me7LogFileContract.LAMBDA_CONTROL_ACTIVE_HEADER);
-        List<Double> throttleAngle = me7Log.get(Me7LogFileContract.THROTTLE_PLATE_ANGLE_HEADER);
-        List<Double> rpm = me7Log.get(Me7LogFileContract.RPM_COLUMN_HEADER);
-
-        for (int i = 0; i < throttleAngle.size(); i++) {
-            if (throttleAngle.get(i) >= minThrottleAngle && lambdaControl.get(i) == lambdaControlEnabled && rpm.get(i) >= minRpm) {
-                if (isValidLogLength(i, minPointsMe7, throttleAngle)) {
-                    int endOfLog = findEndOfLog(i, throttleAngle);
-                    logList.add(getMe7Log(i, endOfLog, me7Log));
-                    i = endOfLog + 1;
-                }
-            }
-        }
-
-        return logList;
-    }
-
-    private Map<String, List<Double>> getMe7Log(int start, int end, Map<String, List<Double>> me7Log) {
-        List<Double> voltages = me7Log.get(Me7LogFileContract.MAF_VOLTAGE_HEADER);
-        List<Double> requestedLambda = me7Log.get(Me7LogFileContract.REQUESTED_LAMBDA_HEADER);
-        List<Double> stft = me7Log.get(Me7LogFileContract.STFT_COLUMN_HEADER);
-        List<Double> ltft = me7Log.get(Me7LogFileContract.LTFT_COLUMN_HEADER);
-        List<Double> lambdaControl = me7Log.get(Me7LogFileContract.LAMBDA_CONTROL_ACTIVE_HEADER);
-        List<Double> throttleAngle = me7Log.get(Me7LogFileContract.THROTTLE_PLATE_ANGLE_HEADER);
-        List<Double> rpm = me7Log.get(Me7LogFileContract.RPM_COLUMN_HEADER);
-
-        Map<String, List<Double>> log = new HashMap<>();
-        log.put(Me7LogFileContract.MAF_VOLTAGE_HEADER, voltages.subList(start, end));
-        log.put(Me7LogFileContract.REQUESTED_LAMBDA_HEADER, requestedLambda.subList(start, end));
-        log.put(Me7LogFileContract.STFT_COLUMN_HEADER, stft.subList(start, end));
-        log.put(Me7LogFileContract.LTFT_COLUMN_HEADER, ltft.subList(start, end));
-        log.put(Me7LogFileContract.LAMBDA_CONTROL_ACTIVE_HEADER, lambdaControl.subList(start, end));
-        log.put(Me7LogFileContract.THROTTLE_PLATE_ANGLE_HEADER, throttleAngle.subList(start, end));
-        log.put(Me7LogFileContract.RPM_COLUMN_HEADER, rpm.subList(start, end));
-
-        return log;
-    }
-
-    private boolean isValidLogLength(int start, int minPoints, List<Double> throttleAngle) {
-        int minValidIndex = start + minPoints;
-
-        if (minValidIndex < throttleAngle.size()) {
-            for (int i = start; i < minValidIndex; i++) {
-                if (throttleAngle.get(i) <= minThrottleAngle) {
-                    return false;
-                }
-            }
-
-            return true;
-        }
-
-        return false;
-    }
-
-    private int findEndOfLog(int start, List<Double> thottleAngle) {
-
-        for (int i = start; i < thottleAngle.size(); i++) {
-            if (thottleAngle.get(i) < minThrottleAngle) {
-                return i;
-            }
-        }
-
-        return thottleAngle.size() - 1;
     }
 
     private double[] toDoubleArray(Double[] array) {

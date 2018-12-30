@@ -1,9 +1,9 @@
-package ui.view.closedloop;
+package ui.view.openloop;
 
-import closedloop.ClosedLoopCorrection;
 import contract.MlhfmFileContract;
 import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
+import openloop.OpenLoopCorrection;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -12,7 +12,7 @@ import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import ui.table.MapTable;
-import ui.viewmodel.closedloop.ClosedLoopCorrectionViewModel;
+import ui.viewmodel.openloop.OpenLoopCorrectionViewModel;
 import writer.MlhfmWriter;
 
 import javax.swing.*;
@@ -22,24 +22,21 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
-public class ClosedLoopCorrectionUiManager {
+public class OpenLoopCorrectionUiManager {
 
     private JFreeChart mlfhmChart;
     private JFreeChart stdDevChart;
     private JPanel correctionPanel;
-    private ClosedLoopCorrection closedLoopCorrection;
+    private OpenLoopCorrection openLoopCorrection;
     private MapTable mapTable;
 
-    public ClosedLoopCorrectionUiManager() {
-        ClosedLoopCorrectionViewModel closedLoopCorrectionViewModel = ClosedLoopCorrectionViewModel.getInstance();
-        closedLoopCorrectionViewModel.getPublishSubject().subscribe(new Observer<ClosedLoopCorrection>() {
-
+    public OpenLoopCorrectionUiManager() {
+        OpenLoopCorrectionViewModel.getInstance().getPublishSubject().subscribe(new Observer<OpenLoopCorrection>() {
             @Override
-            public void onNext(ClosedLoopCorrection closedLoopCorrection) {
-                ClosedLoopCorrectionUiManager.this.closedLoopCorrection = closedLoopCorrection;
-                drawMlhfmChart(closedLoopCorrection.inputMlhfm, closedLoopCorrection.correctedMlhfm);
-                drawStdDevChart(closedLoopCorrection.filteredVoltageStdDev, closedLoopCorrection.correctedMlhfm);
-                drawMapTable(closedLoopCorrection.correctedMlhfm);
+            public void onNext(OpenLoopCorrection openLoopCorrection) {
+                OpenLoopCorrectionUiManager.this.openLoopCorrection = openLoopCorrection;
+                drawMlhfmChart(openLoopCorrection.inputMlhfm, openLoopCorrection.correctedMlhfm);
+                drawMapTable(openLoopCorrection.correctedMlhfm);
             }
 
             @Override
@@ -49,7 +46,7 @@ public class ClosedLoopCorrectionUiManager {
             public void onError(Throwable throwable) {}
 
             @Override
-            public void onComplete() { }
+            public void onComplete() {}
         });
     }
 
@@ -214,7 +211,7 @@ public class ClosedLoopCorrectionUiManager {
                 File selectedFile = fc.getSelectedFile();
 
                 MlhfmWriter mlhfmWriter = new MlhfmWriter();
-                mlhfmWriter.write(selectedFile, closedLoopCorrection.correctedMlhfm);
+                mlhfmWriter.write(selectedFile, openLoopCorrection.correctedMlhfm);
             }
         });
 

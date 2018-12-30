@@ -32,11 +32,27 @@ public class MlhfmUiManager {
 
     public MlhfmUiManager() {
         mlhfmViewModel = MlhfmViewModel.getInstance();
-        mlhfmViewModel.getPublishSubject().subscribe(new Observer<Map<String, List<Double>>>() {
+        mlhfmViewModel.getMlhfmPublishSubject().subscribe(new Observer<Map<String, List<Double>>>() {
             @Override
             public void onNext(Map<String, List<Double>> mlhfmMap) {
                 drawChart(mlhfmMap);
                 drawMapTable(mlhfmMap);
+            }
+
+            @Override
+            public void onSubscribe(Disposable disposable) {}
+
+            @Override
+            public void onError(Throwable throwable) {}
+
+            @Override
+            public void onComplete() {}
+        });
+
+        mlhfmViewModel.getFilePublishSubject().subscribe(new Observer<File>() {
+            @Override
+            public void onNext(File file) {
+                fileLabel.setText(file.getAbsolutePath());
             }
 
             @Override
@@ -138,7 +154,6 @@ public class MlhfmUiManager {
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fc.getSelectedFile();
                 mlhfmViewModel.loadFile(selectedFile);
-                fileLabel.setText(selectedFile.getAbsolutePath());
             }
         });
 

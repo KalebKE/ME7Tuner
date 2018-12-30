@@ -1,11 +1,12 @@
-package ui.viewmodel;
+package ui.viewmodel.closedloop;
 
 import closedloop.ClosedLoopCorrection;
 import closedloop.ClosedLoopCorrectionManager;
 import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.subjects.PublishSubject;
-import preferences.ClosedLoopLogFilterPreferences;
+import preferences.closedloop.ClosedLoopLogFilterPreferences;
+import ui.viewmodel.MlhfmViewModel;
 
 import java.util.List;
 import java.util.Map;
@@ -49,7 +50,7 @@ public class ClosedLoopCorrectionViewModel {
         });
 
         MlhfmViewModel mlhfmViewModel = MlhfmViewModel.getInstance();
-        mlhfmViewModel.getPublishSubject().subscribe(new Observer<Map<String, List<Double>>>() {
+        mlhfmViewModel.getMlhfmPublishSubject().subscribe(new Observer<Map<String, List<Double>>>() {
             @Override
             public void onNext(Map<String, List<Double>> mlhfmMap) {
                 ClosedLoopCorrectionViewModel.this.mlhfmMap = mlhfmMap;

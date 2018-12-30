@@ -4,7 +4,7 @@ import contract.Me7LogFileContract;
 import contract.MlhfmFileContract;
 import org.apache.commons.math3.stat.StatUtils;
 import org.apache.commons.math3.stat.descriptive.moment.Mean;
-import preferences.ClosedLoopLogFilterPreferences;
+import preferences.closedloop.ClosedLoopLogFilterPreferences;
 import stddev.StandardDeviation;
 import util.Util;
 
