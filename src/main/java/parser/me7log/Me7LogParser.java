@@ -46,7 +46,6 @@ public class Me7LogParser {
 
     private void parse(File file, LogType logType, Map<String, List<Double>> map) {
         resetIndices();
-        System.out.println("Parse: " + file.getAbsolutePath());
         try {
             boolean headersFound = false;
             Reader in = new FileReader(file);

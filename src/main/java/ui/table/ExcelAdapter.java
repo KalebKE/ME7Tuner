@@ -73,12 +73,10 @@ public class ExcelAdapter implements ActionListener {
             system.setContents(stSel, stSel);
         }
         if (e.getActionCommand().compareTo("Paste") == 0) {
-            System.out.println("Trying to Paste");
             int startRow = (jTable1.getSelectedRows())[0];
             int startCol = (jTable1.getSelectedColumns())[0];
             try {
                 String trString = (String) (system.getContents(this).getTransferData(DataFlavor.stringFlavor));
-                System.out.println("String is:" + trString);
                 StringTokenizer st1 = new StringTokenizer(trString, "\n");
                 for (int i = 0; st1.hasMoreTokens(); i++) {
                     String rowString = st1.nextToken();
@@ -86,12 +84,9 @@ public class ExcelAdapter implements ActionListener {
                     for (int j = 0; st2.hasMoreTokens(); j++) {
                         String value = st2.nextToken();
 
-                        System.out.println("Value: " + value);
                         if (startRow + i < jTable1.getRowCount() && startCol + j < jTable1.getColumnCount()) {
                             jTable1.setValueAt(Double.valueOf(value), startRow + i, startCol + j);
                         }
-
-                        System.out.println("Putting " + value + "at row=" + startRow + i + "column=" + startCol + j);
                     }
                 }
             } catch (Exception ex) {

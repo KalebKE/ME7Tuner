@@ -18,7 +18,7 @@ public class ClosedLoopMe7LogFilterConfigPanel extends JPanel {
         MIN_THROTTLE_ANGLE("Minimum Throttle Angle"), MIN_RPM("Minimum RPM"), MAX_STD_DEV("Max Std Dev"), STD_DEV_SAMPLE_WINDOW("Std Dev Window Size");
         private String title;
 
-        private FieldTitle(String title) {
+        FieldTitle(String title) {
             this.title = title;
         }
 

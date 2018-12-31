@@ -25,7 +25,7 @@ import java.util.Map;
 public class OpenLoopCorrectionUiManager {
 
     private JFreeChart mlfhmChart;
-    private JFreeChart stdDevChart;
+    private JFreeChart afrCorrectionChart;
     private JPanel correctionPanel;
     private OpenLoopCorrection openLoopCorrection;
     private MapTable mapTable;
@@ -37,16 +37,20 @@ public class OpenLoopCorrectionUiManager {
                 OpenLoopCorrectionUiManager.this.openLoopCorrection = openLoopCorrection;
                 drawMlhfmChart(openLoopCorrection.inputMlhfm, openLoopCorrection.correctedMlhfm);
                 drawMapTable(openLoopCorrection.correctedMlhfm);
+                drawAfrCorrectionChart(openLoopCorrection.correctionsAfrMap);
             }
 
             @Override
-            public void onSubscribe(Disposable disposable) {}
+            public void onSubscribe(Disposable disposable) {
+            }
 
             @Override
-            public void onError(Throwable throwable) {}
+            public void onError(Throwable throwable) {
+            }
 
             @Override
-            public void onComplete() {}
+            public void onComplete() {
+            }
         });
     }
 
@@ -78,7 +82,7 @@ public class OpenLoopCorrectionUiManager {
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
         tabbedPane.addTab("MLHFM", null, getMlhfmChartPanel(), "Voltage to Kg/Hr");
-        tabbedPane.addTab("Std Dev", null, getStdDevChartPanel(), "Standard Deviation");
+        tabbedPane.addTab("AFR Correction %", null, getAfrCorrectionChartPanel(), "AFR Corrections");
 
         return tabbedPane;
     }
@@ -115,14 +119,14 @@ public class OpenLoopCorrectionUiManager {
         c.gridy = 0;
         c.weightx = 0;
         c.weighty = 0.95;
-        c.insets = new Insets(0, 8, 0 ,0);
+        c.insets = new Insets(0, 8, 0, 0);
         panel.add(getMapTablePanel(), c);
 
         return panel;
     }
 
-    private JPanel getStdDevChartPanel() {
-        initStdDevChart();
+    private JPanel getAfrCorrectionChartPanel() {
+        initAfrCorrectionChart();
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
 
@@ -136,7 +140,7 @@ public class OpenLoopCorrectionUiManager {
         c.weightx = 1.0;
         c.weighty = 1.0;
 
-        panel.add(new ChartPanel(stdDevChart), c);
+        panel.add(new ChartPanel(afrCorrectionChart), c);
 
         return panel;
     }
@@ -165,37 +169,31 @@ public class OpenLoopCorrectionUiManager {
 
         XYPlot plot = (XYPlot) mlfhmChart.getPlot();
         plot.setBackgroundPaint(Color.WHITE);
+        plot.setDomainGridlinePaint(Color.BLACK);
+        plot.setRangeGridlinePaint(Color.BLACK);
 
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(true, false);
         plot.setRenderer(renderer);
 
         plot.getRenderer().setSeriesPaint(0, Color.BLUE);
-        plot.getRenderer().setSeriesStroke(0, new BasicStroke(
-                0.3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
-                1.0f, new float[] {1f}, 5.0f
-        ));
-
         plot.getRenderer().setSeriesPaint(1, Color.RED);
-        plot.getRenderer().setSeriesStroke(1, new BasicStroke(
-                0.3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
-                1.0f, new float[] {1f}, 5.0f
-        ));
     }
 
-    private void initStdDevChart() {
+    private void initAfrCorrectionChart() {
         XYSeriesCollection dataset = new XYSeriesCollection();
 
-        stdDevChart = ChartFactory.createScatterPlot(
-                "Standard Deviation",
-                "Voltage", "Std Dev", dataset);
+        afrCorrectionChart = ChartFactory.createScatterPlot(
+                "AFR Correction %",
+                "Voltage", "Correction %", dataset);
 
-        XYPlot plot = (XYPlot)stdDevChart.getPlot();
+        XYPlot plot = (XYPlot) afrCorrectionChart.getPlot();
         plot.setBackgroundPaint(Color.WHITE);
+        plot.setDomainGridlinePaint(Color.BLACK);
+        plot.setRangeGridlinePaint(Color.BLACK);
 
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(false, true);
         plot.setRenderer(renderer);
-
-        plot.getRenderer().setSeriesShape(0, new Ellipse2D.Double(0,0,1,1));
+        plot.getRenderer().setSeriesShape(0, new Ellipse2D.Double(0, 0, 1, 1));
         plot.getRenderer().setSeriesPaint(0, Color.BLUE);
     }
 
@@ -227,7 +225,7 @@ public class OpenLoopCorrectionUiManager {
         List<Double> kghr = mlhfmMap.get(MlhfmFileContract.KILOGRAM_PER_HOUR_HEADER);
         Double[][] data = new Double[kghr.size()][1];
 
-        for(int i = 0; i < data.length; i++) {
+        for (int i = 0; i < data.length; i++) {
             data[i][0] = kghr.get(i);
         }
 
@@ -245,8 +243,8 @@ public class OpenLoopCorrectionUiManager {
             inputMlhfmSeries.add(voltage.get(i), kghr.get(i));
         }
 
-       voltage = correctedMlhfmMap.get(MlhfmFileContract.MAF_VOLTAGE_HEADER);
-         kghr = correctedMlhfmMap.get(MlhfmFileContract.KILOGRAM_PER_HOUR_HEADER);
+        voltage = correctedMlhfmMap.get(MlhfmFileContract.MAF_VOLTAGE_HEADER);
+        kghr = correctedMlhfmMap.get(MlhfmFileContract.KILOGRAM_PER_HOUR_HEADER);
 
         XYSeries correctedMlhfmSeries = new XYSeries("Corrected MLHFM");
 
@@ -255,27 +253,25 @@ public class OpenLoopCorrectionUiManager {
         }
 
         XYPlot plot = (XYPlot) mlfhmChart.getPlot();
-        ((XYSeriesCollection)plot.getDataset()).removeAllSeries();
-        ((XYSeriesCollection)plot.getDataset()).addSeries(inputMlhfmSeries);
-        ((XYSeriesCollection)plot.getDataset()).addSeries(correctedMlhfmSeries);
+        ((XYSeriesCollection) plot.getDataset()).removeAllSeries();
+        ((XYSeriesCollection) plot.getDataset()).addSeries(inputMlhfmSeries);
+        ((XYSeriesCollection) plot.getDataset()).addSeries(correctedMlhfmSeries);
     }
 
-    private void drawStdDevChart(Map<Double, List<Double>> stdDev, Map<String, List<Double>> mlhfmMap) {
+    private void drawAfrCorrectionChart(Map<Double, List<Double>> correctedAfrMap) {
 
-        List<Double> voltages = mlhfmMap.get(MlhfmFileContract.MAF_VOLTAGE_HEADER);
+        XYSeries series = new XYSeries("Raw AFR Correction %");
 
-        XYSeries series = new XYSeries("Std Dev");
-
-        for (Double voltage : voltages) {
-            List<Double> values = stdDev.get(voltage);
+        for (Double voltage : correctedAfrMap.keySet()) {
+            List<Double> values = correctedAfrMap.get(voltage);
 
             for (Double value : values) {
                 series.add(voltage, value);
             }
         }
 
-        XYPlot plot = (XYPlot)stdDevChart.getPlot();
-        ((XYSeriesCollection)plot.getDataset()).removeAllSeries();
-        ((XYSeriesCollection)plot.getDataset()).addSeries(series);
+        XYPlot plot = (XYPlot) afrCorrectionChart.getPlot();
+        ((XYSeriesCollection) plot.getDataset()).removeAllSeries();
+        ((XYSeriesCollection) plot.getDataset()).addSeries(series);
     }
 }

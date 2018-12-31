@@ -168,16 +168,14 @@ public class MlhfmUiManager {
                 "Voltage", "kg/hr", dataset);
 
         XYPlot plot = (XYPlot)chart.getPlot();
-        plot.setBackgroundPaint(java.awt.Color.WHITE);
+        plot.setBackgroundPaint(Color.WHITE);
+        plot.setDomainGridlinePaint(Color.BLACK);
+        plot.setRangeGridlinePaint(Color.BLACK);
 
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(true, false);
         plot.setRenderer(renderer);
 
         plot.getRenderer().setSeriesPaint(0, Color.BLUE);
-        plot.getRenderer().setSeriesStroke(0, new BasicStroke(
-                0.3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
-                1.0f, new float[] {1f}, 5.0f
-        ));
     }
 
     private void initMapTable() {

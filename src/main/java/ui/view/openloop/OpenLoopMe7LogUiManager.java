@@ -285,8 +285,8 @@ public class OpenLoopMe7LogUiManager {
 
         XYPlot plot = (XYPlot)chart.getPlot();
         plot.setBackgroundPaint(Color.WHITE);
-        plot.setDomainGridlinePaint(Color.black);
-        plot.setRangeGridlinePaint(Color.black);
+        plot.setDomainGridlinePaint(Color.BLACK);
+        plot.setRangeGridlinePaint(Color.BLACK);
 
         XYLineAndShapeRenderer rendererMe7 = new XYLineAndShapeRenderer(true, false);
         rendererMe7.setAutoPopulateSeriesPaint(false);

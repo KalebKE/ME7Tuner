@@ -19,7 +19,7 @@ public class OpenLoopCorrectionManager {
     private final double maxAfr;
 
     private Map<String, List<Double>> correctedMlhfm = new HashMap<>();
-    private Map<Double, List<Double>> correctedAfrMap = new HashMap<>();
+    private Map<Double, List<Double>> correctionsAfrMap = new HashMap<>();
 
     private OpenLoopCorrection openLoopCorrection;
 
@@ -38,7 +38,7 @@ public class OpenLoopCorrectionManager {
 
         generateMlhfm(mlhfm, me7LogList, afrLogList);
 
-        openLoopCorrection = new OpenLoopCorrection(mlhfm, correctedMlhfm, correctedAfrMap);
+        openLoopCorrection = new OpenLoopCorrection(mlhfm, correctedMlhfm, correctionsAfrMap);
     }
 
     public OpenLoopCorrection getOpenLoopCorrection() {
@@ -127,7 +127,7 @@ public class OpenLoopCorrectionManager {
 
         Mean mean = new Mean();
         for (Double voltage : mlhfmVoltage) {
-            List<Double> corrections = correctedAfrMap.get(voltage);
+            List<Double> corrections = correctionsAfrMap.get(voltage);
             // Get the mean of the correction set
             double meanValue = mean.evaluate(toDoubleArray(corrections.toArray(new Double[0])), 0, corrections.size());
             // Get the mode of the correction set
@@ -157,7 +157,7 @@ public class OpenLoopCorrectionManager {
 
                 double mlhfmVoltage = mlhfmVoltageList.get(j);
 
-                correctedAfrMap.put(mlhfmVoltage, new ArrayList<>());
+                correctionsAfrMap.put(mlhfmVoltage, new ArrayList<>());
 
                 // Get the measured MAF voltages in the log
                 List<Double> me7VoltageList = me7Log.get(Me7LogFileContract.MAF_VOLTAGE_HEADER);
@@ -185,9 +185,9 @@ public class OpenLoopCorrectionManager {
                         double rawAfr = afr / (1 - (stft + ltft));
                         double afrCorrection = (rawAfr / targetAfr) - 1;
 
-                        correctedAfrMap.get(mlhfmVoltage).add(afrCorrection);
+                        correctionsAfrMap.get(mlhfmVoltage).add(afrCorrection);
                     } else {
-                        correctedAfrMap.get(mlhfmVoltage).add(Double.NaN);
+                        correctionsAfrMap.get(mlhfmVoltage).add(Double.NaN);
                     }
                 }
             }

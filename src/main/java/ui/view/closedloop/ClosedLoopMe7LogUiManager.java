@@ -24,7 +24,6 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 
-
 public class ClosedLoopMe7LogUiManager {
 
     private JFreeChart chart;
@@ -33,15 +32,29 @@ public class ClosedLoopMe7LogUiManager {
     private ClosedLoopMe7LogViewModel closedLoopViewModel;
 
     private Map<String, List<Double>> mlhfmMap;
+    private Map<String, List<Double>> me7LogMap;
     private File me7LogFile;
 
-    public ClosedLoopMe7LogUiManager() {
+    ClosedLoopMe7LogUiManager() {
         closedLoopViewModel = ClosedLoopMe7LogViewModel.getInstance();
         closedLoopViewModel.getPublishSubject().subscribe(new Observer<Map<String, List<Double>>>() {
             @Override
             public void onNext(Map<String, List<Double>> me7LogMap) {
+                ClosedLoopMe7LogUiManager.this.me7LogMap = me7LogMap;
                 if(mlhfmMap != null) {
                     drawChart(me7LogMap, mlhfmMap);
+
+                    // Let all of the observers get notified...
+                    new java.util.Timer().schedule(
+                            new java.util.TimerTask() {
+                                @Override
+                                public void run() {
+                                    ClosedLoopCorrectionViewModel.getInstance().generateCorrection();
+                                    cancel();
+                                }
+                            },
+                            1000
+                    );
                 }
             }
 
@@ -60,6 +73,10 @@ public class ClosedLoopMe7LogUiManager {
             @Override
             public void onNext(Map<String, List<Double>> mlhfmMap) {
                 ClosedLoopMe7LogUiManager.this.mlhfmMap = mlhfmMap;
+
+                if(ClosedLoopMe7LogUiManager.this.me7LogMap != null) {
+                    ClosedLoopCorrectionViewModel.getInstance().generateCorrection();
+                }
             }
 
             @Override
@@ -123,8 +140,9 @@ public class ClosedLoopMe7LogUiManager {
 
         GridBagConstraints c = new GridBagConstraints();
 
-        c.weightx = 1;
+        c.gridwidth = 2;
 
+        c.weightx = 0.1;
         c.gridx = 0;
         c.gridy = 0;
         c.anchor = GridBagConstraints.LINE_START;
@@ -132,6 +150,7 @@ public class ClosedLoopMe7LogUiManager {
         JButton button = getConfigureFilterButton();
         panel.add(button, c);
 
+        c.weightx = 0.9;
         c.gridx = 1;
         c.gridy = 0;
         c.anchor = GridBagConstraints.CENTER;
@@ -145,24 +164,7 @@ public class ClosedLoopMe7LogUiManager {
         fileLabel = new JLabel("No File Selected");
         panel.add(fileLabel, c);
 
-        c.gridx = 2;
-        c.gridy = 0;
-        c.anchor = GridBagConstraints.LINE_END;
-
-        button = getApplyCorrectionButton();
-        panel.add(button, c);
-
         return panel;
-    }
-
-    private JButton getApplyCorrectionButton() {
-        JButton button = new JButton("Generate Correction");
-
-        button.addActionListener(e -> {
-            ClosedLoopCorrectionViewModel.getInstance().generateCorrection();
-        });
-
-        return button;
     }
 
     private JButton getConfigureFilterButton() {
@@ -190,6 +192,10 @@ public class ClosedLoopMe7LogUiManager {
                             ClosedLoopLogFilterPreferences.setStdDevSampleWindowPreference(Integer.valueOf(filterConfigPane.getFieldText(fieldTitle)));
                             break;
                     }
+
+                    if(this.me7LogFile != null) {
+                        ClosedLoopCorrectionViewModel.getInstance().generateCorrection();
+                    }
                 }
             }
         });
@@ -216,7 +222,7 @@ public class ClosedLoopMe7LogUiManager {
     }
 
     private void loadMe7File(File file) {
-        closedLoopViewModel.loadDirectory(this.me7LogFile );
+        closedLoopViewModel.loadDirectory(file);
         fileLabel.setText(this.me7LogFile.getName());
     }
 
@@ -229,6 +235,8 @@ public class ClosedLoopMe7LogUiManager {
 
         XYPlot plot = (XYPlot)chart.getPlot();
         plot.setBackgroundPaint(Color.WHITE);
+        plot.setDomainGridlinePaint(Color.BLACK);
+        plot.setRangeGridlinePaint(Color.BLACK);
 
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(false, true);
         plot.setRenderer(renderer);

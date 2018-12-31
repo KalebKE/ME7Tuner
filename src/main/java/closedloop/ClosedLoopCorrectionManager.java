@@ -18,7 +18,11 @@ public class ClosedLoopCorrectionManager {
     private final double maxStdDev;
 
     private Map<String, List<Double>> correctedMlhfm = new HashMap<>();
+    private Map<Double, List<Double>> correctionsAfrMap = new HashMap<>();
     private Map<Double, List<Double>> filteredVoltageStdDev = new HashMap<>();
+    private Map<Double, Double> meanAfrMap = new HashMap<>();
+    private Map<Double, double[]> modeAfrMap = new HashMap<>();
+    private Map<Double, Double> correctedAfrMap = new HashMap<>();
 
     private ClosedLoopCorrection closedLoopCorrection;
 
@@ -38,6 +42,10 @@ public class ClosedLoopCorrectionManager {
         for (Double voltage : mlhfm.get(MlhfmFileContract.MAF_VOLTAGE_HEADER)) {
             correctionErrorMap.put(voltage, new ArrayList<>());
             filteredVoltageStdDev.put(voltage, new ArrayList<>());
+            correctionsAfrMap.put(voltage, new ArrayList<>());
+            meanAfrMap.put(voltage, 0d);
+            modeAfrMap.put(voltage, new double[0]);
+            correctedAfrMap.put(voltage, 0d);
         }
 
         calculateCorrections(correctionErrorMap, me7LogMap, mlhfm);
@@ -52,7 +60,7 @@ public class ClosedLoopCorrectionManager {
 
         applyCorrections(correctionErrorList, mlhfm);
 
-        closedLoopCorrection = new ClosedLoopCorrection(mlhfm, correctedMlhfm, filteredVoltageStdDev);
+        closedLoopCorrection = new ClosedLoopCorrection(mlhfm, correctedMlhfm, filteredVoltageStdDev, correctionsAfrMap, meanAfrMap, modeAfrMap, correctedAfrMap);
     }
 
     private void calculateCorrections(Map<Double, List<Double>> correctionError, Map<String, List<Double>> me7LogMap, Map<String, List<Double>> mlhfm) {
@@ -76,12 +84,14 @@ public class ClosedLoopCorrectionManager {
                 // Calculate the error based on LTFT and STFT
                 double stftValue = stft.get(i) - 1;
                 double ltftValue = ltft.get(i) - 1;
+                double afrCorrectionError = stftValue + ltftValue;
 
                 // Record the correction.
-                correctionError.get(mlhfmVoltageKey).add(stftValue + ltftValue);
+                correctionError.get(mlhfmVoltageKey).add(afrCorrectionError);
 
                 // Keep track of the standard deviation of the logged voltages relative to the MLHFM voltages
                 filteredVoltageStdDev.get(mlhfmVoltageKey).add(me7voltageStdDev.get(i));
+                correctionsAfrMap.get(mlhfmVoltageKey).add(afrCorrectionError);
             }
         }
     }
@@ -96,6 +106,9 @@ public class ClosedLoopCorrectionManager {
             double meanValue = mean.evaluate(Util.toDoubleArray(corrections.toArray(new Double[0])), 0, corrections.size());
             // Get the mode of the correction set
             double[] mode = StatUtils.mode(Util.toDoubleArray(corrections.toArray(new Double[0])));
+
+            meanAfrMap.put(voltage, meanValue);
+            modeAfrMap.put(voltage, mode);
 
             double correction = meanValue;
 
@@ -160,6 +173,7 @@ public class ClosedLoopCorrectionManager {
 
         for (int i = 0; i < voltage.size(); i++) {
             totalCorrectionError.put(voltage.get(i), correctionErrorList.get(i));
+            correctedAfrMap.put(voltage.get(i), correctionErrorList.get(i));
         }
 
         correctedMlhfm.put(MlhfmFileContract.MAF_VOLTAGE_HEADER, voltage);

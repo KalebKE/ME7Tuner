@@ -92,24 +92,16 @@ public class OpenLoopCorrectionViewModel {
     }
 
     public void generateCorrection() {
-        System.out.println("generateCorrection()");
         if(me7LogMap != null && afrLogMap != null && mlhfmMap != null) {
+            CompletableFuture.runAsync(() -> {
+                OpenLoopCorrectionManager openLoopCorrectionManager = new OpenLoopCorrectionManager(OpenLoopLogFilterPreferences.getMinThrottleAnglePreference(), OpenLoopLogFilterPreferences.getMinRpmPreference(), OpenLoopLogFilterPreferences.getMinMe7PointsPreference(), OpenLoopLogFilterPreferences.getMinAfrPointsPreference(), OpenLoopLogFilterPreferences.getMaxAfrPreference());
+                openLoopCorrectionManager.correct(me7LogMap, afrLogMap, mlhfmMap);
+                OpenLoopCorrection openLoopCorrection = openLoopCorrectionManager.getOpenLoopCorrection();
 
-            System.out.println("Valid Inputs");
-            OpenLoopCorrectionManager openLoopCorrectionManager = new OpenLoopCorrectionManager(OpenLoopLogFilterPreferences.getMinThrottleAnglePreference(), OpenLoopLogFilterPreferences.getMinRpmPreference(), OpenLoopLogFilterPreferences.getMinMe7PointsPreference(), OpenLoopLogFilterPreferences.getMinAfrPointsPreference(), OpenLoopLogFilterPreferences.getMaxAfrPreference());
-            openLoopCorrectionManager.correct(me7LogMap, afrLogMap, mlhfmMap);
-            OpenLoopCorrection openLoopCorrection = openLoopCorrectionManager.getOpenLoopCorrection();
-
-            if(openLoopCorrection != null) {
-                System.out.println("Publish Results()");
-                publishSubject.onNext(openLoopCorrection);
-            } else {
-                System.out.println("Null Correction!");
-            }
-
-//            CompletableFuture.runAsync(() -> {
-//
-//            });
+                if(openLoopCorrection != null) {
+                    publishSubject.onNext(openLoopCorrection);
+                }
+            });
         }
     }
 

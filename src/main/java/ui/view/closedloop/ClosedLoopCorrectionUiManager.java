@@ -4,6 +4,7 @@ import closedloop.ClosedLoopCorrection;
 import contract.MlhfmFileContract;
 import io.reactivex.Observer;
 import io.reactivex.disposables.Disposable;
+import org.apache.commons.math3.stat.descriptive.moment.Mean;
 import org.jfree.chart.ChartFactory;
 import org.jfree.chart.ChartPanel;
 import org.jfree.chart.JFreeChart;
@@ -24,13 +25,20 @@ import java.util.Map;
 
 public class ClosedLoopCorrectionUiManager {
 
+    private static final int AFR_CORRECTION_POINT_SERIES_INDEX = 1;
+    private static final int AFR_CORRECTION_LINE_SERIES_INDEX = 0;
+
     private JFreeChart mlfhmChart;
     private JFreeChart stdDevChart;
+    private JFreeChart afrCorrectionChart;
     private JPanel correctionPanel;
     private ClosedLoopCorrection closedLoopCorrection;
     private MapTable mapTable;
 
-    public ClosedLoopCorrectionUiManager() {
+    private XYSeriesCollection afrCorrectionPointDataSet;
+    private XYSeriesCollection afrCorrectionLineDataSet;
+
+    ClosedLoopCorrectionUiManager() {
         ClosedLoopCorrectionViewModel closedLoopCorrectionViewModel = ClosedLoopCorrectionViewModel.getInstance();
         closedLoopCorrectionViewModel.getPublishSubject().subscribe(new Observer<ClosedLoopCorrection>() {
 
@@ -40,6 +48,7 @@ public class ClosedLoopCorrectionUiManager {
                 drawMlhfmChart(closedLoopCorrection.inputMlhfm, closedLoopCorrection.correctedMlhfm);
                 drawStdDevChart(closedLoopCorrection.filteredVoltageStdDev, closedLoopCorrection.correctedMlhfm);
                 drawMapTable(closedLoopCorrection.correctedMlhfm);
+                drawAfrCorrectionChart(closedLoopCorrection.correctionsAfrMap, closedLoopCorrection.meanAfrMap, closedLoopCorrection.modeAfrMap, closedLoopCorrection.correctedAfrMap);
             }
 
             @Override
@@ -82,6 +91,7 @@ public class ClosedLoopCorrectionUiManager {
         tabbedPane.setTabPlacement(JTabbedPane.BOTTOM);
         tabbedPane.addTab("MLHFM", null, getMlhfmChartPanel(), "Voltage to Kg/Hr");
         tabbedPane.addTab("Std Dev", null, getStdDevChartPanel(), "Standard Deviation");
+        tabbedPane.addTab("AFR Correction %", null, getAfrCorrectionChartPanel(), "AFR Correction");
 
         return tabbedPane;
     }
@@ -144,6 +154,26 @@ public class ClosedLoopCorrectionUiManager {
         return panel;
     }
 
+    private JPanel getAfrCorrectionChartPanel() {
+        initAfrCorrectionChart();
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridBagLayout());
+
+        GridBagConstraints c = new GridBagConstraints();
+
+        c.fill = GridBagConstraints.BOTH;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.gridheight = 1;
+        c.gridwidth = 1;
+        c.weightx = 1.0;
+        c.weighty = 1.0;
+
+        panel.add(new ChartPanel(afrCorrectionChart), c);
+
+        return panel;
+    }
+
     private JPanel getActionPanel() {
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
@@ -168,21 +198,14 @@ public class ClosedLoopCorrectionUiManager {
 
         XYPlot plot = (XYPlot) mlfhmChart.getPlot();
         plot.setBackgroundPaint(Color.WHITE);
+        plot.setDomainGridlinePaint(Color.BLACK);
+        plot.setRangeGridlinePaint(Color.BLACK);
 
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(true, false);
         plot.setRenderer(renderer);
 
         plot.getRenderer().setSeriesPaint(0, Color.BLUE);
-        plot.getRenderer().setSeriesStroke(0, new BasicStroke(
-                0.3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
-                1.0f, new float[] {1f}, 5.0f
-        ));
-
         plot.getRenderer().setSeriesPaint(1, Color.RED);
-        plot.getRenderer().setSeriesStroke(1, new BasicStroke(
-                0.3f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND,
-                1.0f, new float[] {1f}, 5.0f
-        ));
     }
 
     private void initStdDevChart() {
@@ -194,12 +217,42 @@ public class ClosedLoopCorrectionUiManager {
 
         XYPlot plot = (XYPlot)stdDevChart.getPlot();
         plot.setBackgroundPaint(Color.WHITE);
+        plot.setDomainGridlinePaint(Color.BLACK);
+        plot.setRangeGridlinePaint(Color.BLACK);
 
         XYLineAndShapeRenderer renderer = new XYLineAndShapeRenderer(false, true);
         plot.setRenderer(renderer);
 
         plot.getRenderer().setSeriesShape(0, new Ellipse2D.Double(0,0,1,1));
         plot.getRenderer().setSeriesPaint(0, Color.BLUE);
+    }
+
+    private void initAfrCorrectionChart() {
+        afrCorrectionPointDataSet = new XYSeriesCollection();
+        afrCorrectionLineDataSet = new XYSeriesCollection();
+
+        afrCorrectionChart = ChartFactory.createScatterPlot(
+                "AFR Correction %",
+                "Voltage", "Correction %", new XYSeriesCollection());
+
+        XYPlot plot = (XYPlot) afrCorrectionChart.getPlot();
+        plot.setBackgroundPaint(Color.WHITE);
+        plot.setDomainGridlinePaint(Color.BLACK);
+        plot.setRangeGridlinePaint(Color.BLACK);
+
+        XYLineAndShapeRenderer afrCorrectionLineRenderer = new XYLineAndShapeRenderer(true, false);
+        afrCorrectionLineRenderer.setSeriesPaint(0, Color.RED);
+        afrCorrectionLineRenderer.setSeriesPaint(1, Color.GREEN);
+        afrCorrectionLineRenderer.setSeriesPaint(2, Color.MAGENTA);
+
+        plot.setRenderer(AFR_CORRECTION_LINE_SERIES_INDEX, afrCorrectionLineRenderer);
+
+        XYLineAndShapeRenderer afrCorrectionPointRenderer = new XYLineAndShapeRenderer(false, true);
+        afrCorrectionPointRenderer.setAutoPopulateSeriesShape(false);
+        afrCorrectionPointRenderer.setDefaultShape(new Ellipse2D.Double(0, 0, 1, 1));
+        afrCorrectionPointRenderer.setSeriesPaint(0, Color.BLUE);
+
+        plot.setRenderer(AFR_CORRECTION_POINT_SERIES_INDEX, afrCorrectionPointRenderer);
     }
 
     private JButton getFileButton() {
@@ -280,5 +333,70 @@ public class ClosedLoopCorrectionUiManager {
         XYPlot plot = (XYPlot)stdDevChart.getPlot();
         ((XYSeriesCollection)plot.getDataset()).removeAllSeries();
         ((XYSeriesCollection)plot.getDataset()).addSeries(series);
+    }
+
+
+
+    private void drawAfrCorrectionChart(Map<Double, List<Double>> correctionsAfrMap, Map<Double, Double> meanAfrMap, Map<Double, double[]> modeAfrMap, Map<Double, Double> correctedAfrMap) {
+
+        XYPlot plot = (XYPlot) afrCorrectionChart.getPlot();
+
+        afrCorrectionPointDataSet.removeAllSeries();
+        afrCorrectionLineDataSet.removeAllSeries();
+
+        generateFinalAfrCorrectionSeries(correctedAfrMap);
+        generateModeAfrCorrectionSeries(modeAfrMap);
+        generateMeanAfrCorrectionSeries(meanAfrMap);
+        plot.setDataset(AFR_CORRECTION_LINE_SERIES_INDEX, afrCorrectionLineDataSet);
+
+        generateRawAfrCorrections(correctionsAfrMap);
+        plot.setDataset(AFR_CORRECTION_POINT_SERIES_INDEX, afrCorrectionPointDataSet);
+    }
+
+    private void generateRawAfrCorrections(Map<Double, List<Double>> correctionsAfrMap) {
+        XYSeries afrCorrectionsSeries = new XYSeries("AFR Corrections %");
+
+        for (Double voltage : correctionsAfrMap.keySet()) {
+            List<Double> values = correctionsAfrMap.get(voltage);
+
+            for (Double value : values) {
+                afrCorrectionsSeries.add(voltage, value);
+            }
+        }
+
+        afrCorrectionPointDataSet.addSeries(afrCorrectionsSeries);
+    }
+
+    private void generateMeanAfrCorrectionSeries(Map<Double, Double> meanAfrMap) {
+        XYSeries meanAfrCorrectionSeries = new XYSeries("Mean AFR Correction %");
+
+        for(Double voltage: meanAfrMap.keySet()) {
+            meanAfrCorrectionSeries.add(voltage, meanAfrMap.get(voltage));
+        }
+
+        afrCorrectionLineDataSet.addSeries(meanAfrCorrectionSeries);
+    }
+
+    private void generateModeAfrCorrectionSeries(Map<Double, double[]> modeAfrMap) {
+        Mean mean = new Mean();
+
+        XYSeries modeAfrCorrectionSeries = new XYSeries("Mode AFR Correction %");
+
+        for(Double voltage: modeAfrMap.keySet()) {
+            double[] mode = modeAfrMap.get(voltage);
+            modeAfrCorrectionSeries.add(voltage.doubleValue(), mean.evaluate(mode, 0, mode.length));
+        }
+
+        afrCorrectionLineDataSet.addSeries(modeAfrCorrectionSeries);
+    }
+
+    private void generateFinalAfrCorrectionSeries(Map<Double, Double> correctedAfrMap) {
+        XYSeries afrCorrectionSeries = new XYSeries("Final AFR Correction %");
+
+        for(Double voltage: correctedAfrMap.keySet()) {
+            afrCorrectionSeries.add(voltage, correctedAfrMap.get(voltage));
+        }
+
+        afrCorrectionLineDataSet.addSeries(afrCorrectionSeries);
     }
 }
