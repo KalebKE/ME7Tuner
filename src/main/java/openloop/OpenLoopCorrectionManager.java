@@ -62,7 +62,6 @@ public class OpenLoopCorrectionManager {
         postProcessCorrections(correctedAfrList);
         // Smooth the corrections
         smooth(correctedAfrList, 5);
-        System.out.println(Arrays.toString(correctedAfrList.toArray()));
         applyCorrections(mlhfm, correctedAfrList);
     }
 

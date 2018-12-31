@@ -99,9 +99,10 @@ public class ClosedLoopCorrectionUiManager {
     private JPanel getMapTablePanel() {
         initMapTable();
         JPanel panel = new JPanel();
-        panel.setLayout(new BoxLayout(panel, BoxLayout.Y_AXIS));
-        panel.setBackground(Color.BLUE);
-
+        panel.setLayout(new GridLayout(1, 1));
+        panel.setMinimumSize(new Dimension(120, 100));
+        panel.setMaximumSize(new Dimension(120, 100));
+        panel.setPreferredSize(new Dimension(120, 100));
         panel.add(mapTable.getScrollPane());
 
         return panel;

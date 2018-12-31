@@ -15,6 +15,9 @@ import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
 import preferences.openloop.OpenLoopLogFilterPreferences;
+import ui.view.closedloop.ClosedLoopMe7LogUiManager;
+import ui.viewmodel.MlhfmViewModel;
+import ui.viewmodel.closedloop.ClosedLoopCorrectionViewModel;
 import ui.viewmodel.openloop.OpenLoopAfrLogViewModel;
 import ui.viewmodel.openloop.OpenLoopCorrectionViewModel;
 import ui.viewmodel.openloop.OpenLoopMe7LogViewModel;
@@ -41,6 +44,10 @@ public class OpenLoopMe7LogUiManager {
     private File me7LogFile;
     private File afrLogFile;
 
+    private Map<String, List<Double>> me7LogMap;
+    private Map<String, List<Double>> afrLogMap;
+    private Map<String, List<Double>> mlhfmMap;
+
     public OpenLoopMe7LogUiManager() {
 
         me7Dataset = new XYSeriesCollection();
@@ -50,7 +57,9 @@ public class OpenLoopMe7LogUiManager {
         openLoopMe7LogViewModel.getPublishSubject().subscribe(new Observer<Map<String, List<Double>>>() {
             @Override
             public void onNext(Map<String, List<Double>> me7LogMap) {
+                OpenLoopMe7LogUiManager.this.me7LogMap = me7LogMap;
                 drawMe7LogChart(me7LogMap);
+                generateCorrection();
             }
 
             @Override
@@ -67,22 +76,54 @@ public class OpenLoopMe7LogUiManager {
         openLoopAfrLogViewModel.getPublishSubject().subscribe(new Observer<Map<String, List<Double>>>() {
             @Override
             public void onNext(Map<String, List<Double>> afrLogMap) {
+                OpenLoopMe7LogUiManager.this.afrLogMap = afrLogMap;
                 drawAfrLogChart(afrLogMap);
+                generateCorrection();
             }
 
             @Override
             public void onSubscribe(Disposable disposable) {}
 
             @Override
-            public void onError(Throwable throwable) {
+            public void onError(Throwable throwable) {}
 
+            @Override
+            public void onComplete() {}
+        });
+
+        MlhfmViewModel mlhfmViewModel = MlhfmViewModel.getInstance();
+        mlhfmViewModel.getMlhfmPublishSubject().subscribe(new Observer<Map<String, List<Double>>>() {
+            @Override
+            public void onNext(Map<String, List<Double>> mlhfmMap) {
+                OpenLoopMe7LogUiManager.this.mlhfmMap = mlhfmMap;
+                generateCorrection();
             }
 
             @Override
-            public void onComplete() {
+            public void onSubscribe(Disposable disposable) {}
 
-            }
+            @Override
+            public void onError(Throwable throwable) {}
+
+            @Override
+            public void onComplete() {}
         });
+    }
+
+    private void generateCorrection() {
+        if(mlhfmMap != null && me7LogMap != null && afrLogMap != null) {
+            // Let all of the observers get notified...
+            new java.util.Timer().schedule(
+                    new java.util.TimerTask() {
+                        @Override
+                        public void run() {
+                            OpenLoopCorrectionViewModel.getInstance().generateCorrection();
+                            cancel();
+                        }
+                    },
+                    1000
+            );
+        }
     }
 
     JPanel getMe7LogPanel() {
@@ -135,8 +176,9 @@ public class OpenLoopMe7LogUiManager {
 
         GridBagConstraints c = new GridBagConstraints();
 
-        c.weightx = 1;
+        c.gridwidth = 2;
 
+        c.weightx = 0.1;
         c.gridx = 0;
         c.gridy = 0;
         c.anchor = GridBagConstraints.LINE_START;
@@ -144,51 +186,53 @@ public class OpenLoopMe7LogUiManager {
         JButton button = getConfigureFilterButton();
         panel.add(button, c);
 
+        c.weightx = 0.9;
         c.gridx = 1;
         c.gridy = 0;
         c.anchor = GridBagConstraints.CENTER;
 
-        button = getMe7FileButton();
+        panel.add(getFilePanel(), c);
+
+        return panel;
+    }
+
+    private JPanel getFilePanel() {
+        JPanel panel = new JPanel();
+        panel.setLayout(new GridBagLayout());
+
+        GridBagConstraints c = new GridBagConstraints();
+
+        c.gridx = 0;
+        c.gridy = 0;
+        c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(0, 0, 0, 32);
+
+        JButton button = getMe7FileButton();
         panel.add(button, c);
 
-        c.gridx = 1;
+        c.gridx = 0;
         c.gridy = 1;
 
         me7FileLabel = new JLabel("No File Selected");
         panel.add(me7FileLabel, c);
 
-        c.gridx = 2;
+        c.gridx = 1;
         c.gridy = 0;
         c.anchor = GridBagConstraints.CENTER;
+        c.insets = new Insets(0, 32, 0, 0);
 
         button = getAfrFileButton();
         panel.add(button, c);
 
-        c.gridx = 2;
+        c.gridx = 1;
         c.gridy = 1;
 
         afrFileLabel = new JLabel("No File Selected");
         panel.add(afrFileLabel, c);
 
-        c.gridx = 3;
-        c.gridy = 0;
-        c.anchor = GridBagConstraints.LINE_END;
-
-        button = getApplyCorrectionButton();
-        panel.add(button, c);
-
         return panel;
     }
 
-    private JButton getApplyCorrectionButton() {
-        JButton button = new JButton("Generate Correction");
-
-        button.addActionListener(e -> {
-            OpenLoopCorrectionViewModel.getInstance().generateCorrection();
-        });
-
-        return button;
-    }
 
     private JButton getConfigureFilterButton() {
         JButton button = new JButton("Configure Filter");
@@ -303,8 +347,6 @@ public class OpenLoopMe7LogUiManager {
         me7Dataset.removeAllSeries();
 
         List<Map<String, List<Double>>> me7LogList = Me7LogUtil.findMe7Logs(me7LogMap, 80, 0, 2000, 75);
-
-        System.out.println(me7LogList.size());
 
         int logCount = 1;
         for (Map<String, List<Double>> map : me7LogList) {
