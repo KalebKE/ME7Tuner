@@ -1,7 +1,8 @@
 package ui.view;
 
-import ui.view.closedloop.ClosedLoopUiManager;
-import ui.view.openloop.OpenLoopUiManager;
+import ui.view.closedloopfueling.ClosedLoopFuelingUiManager;
+import ui.view.openloopfueling.OpenLoopFuelingUiManager;
+import ui.view.primaryfueling.PrimaryFuelingUiManager;
 
 import javax.swing.*;
 
@@ -17,8 +18,9 @@ public class MainManager {
 
     private JTabbedPane getTabbedPane() {
         JTabbedPane tabbedPane = new JTabbedPane();
-        tabbedPane.addTab("Closed Loop", null, new ClosedLoopUiManager().getClosedLoopPanel(), "Closed Loop Fueling");
-        tabbedPane.addTab("Open Loop", null, new OpenLoopUiManager().getOpenLoopPanel(), "Open Loop Fueling");
+        tabbedPane.addTab("Closed Loop Fueling", null, new ClosedLoopFuelingUiManager().getClosedLoopPanel(), "Closed Loop Fueling");
+        tabbedPane.addTab("Open Loop Fueling", null, new OpenLoopFuelingUiManager().getOpenLoopPanel(), "Open Loop Fueling");
+        tabbedPane.addTab("Primary Fueling", null, new PrimaryFuelingUiManager().getPrimaryFuelingPanel(), "Primary Fueling");
 
         return tabbedPane;
     }
