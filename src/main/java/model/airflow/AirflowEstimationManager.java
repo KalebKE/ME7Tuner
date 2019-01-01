@@ -18,13 +18,8 @@ public class AirflowEstimationManager {
     private final double minRpm;
     private final double maxAfr;
 
-    private double fuelInjectorCubicCentimetersPerMinute = 865;
-    private double numFuelInjectors = 6;
-    private double totalFuelFlowGramsPerMinute;
-
-    private double methanolInjectorCubicCentimetersPerMinute = 0;
-    private double numMethanolInjectors = 0;
-    private double totalMethanolFlowGramsPerMinute;
+    private final double totalFuelFlowGramsPerMinute;
+    private final double totalMethanolFlowGramsPerMinute;
 
     private List<List<Double>> estimatedAirflowGramsPerSecondLogs;
     private List<List<Double>> measuredAirflowGramsPerSecondLogs;
@@ -32,7 +27,7 @@ public class AirflowEstimationManager {
 
     private AirflowEstimation airflowEstimation;
 
-    public AirflowEstimationManager(double minThrottleAngle, double minRpm, int minPointsMe7, int minPointsAfr, double maxAfr) {
+    public AirflowEstimationManager(double minThrottleAngle, double minRpm, int minPointsMe7, int minPointsAfr, double maxAfr, double fuelInjectorCubicCentimetersPerMinute, double numFuelInjectors, double methanolInjectorCubicCentimetersPerMinute, double numMethanolInjectors) {
         this.minThrottleAngle = minThrottleAngle;
         this.minRpm = minRpm;
         this.minPointsMe7 = minPointsMe7;

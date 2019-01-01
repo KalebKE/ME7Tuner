@@ -6,6 +6,7 @@ import io.reactivex.subjects.PublishSubject;
 import model.airflow.AirflowEstimation;
 import model.airflow.AirflowEstimationManager;
 import preferences.openloopfueling.OpenLoopFuelingLogFilterPreferences;
+import preferences.primaryfueling.PrimaryFuelingPreferences;
 
 import java.util.List;
 import java.util.Map;
@@ -73,7 +74,7 @@ public class OpenLoopFuelingAirflowViewModel {
     private void generateAirflowEstimation() {
         if(me7LogMap != null && afrLogMap != null) {
             CompletableFuture.runAsync(() -> {
-                AirflowEstimationManager airflowEstimationManager = new AirflowEstimationManager(OpenLoopFuelingLogFilterPreferences.getMinThrottleAnglePreference(), OpenLoopFuelingLogFilterPreferences.getMinRpmPreference(), OpenLoopFuelingLogFilterPreferences.getMinMe7PointsPreference(), OpenLoopFuelingLogFilterPreferences.getMinAfrPointsPreference(), OpenLoopFuelingLogFilterPreferences.getMaxAfrPreference());
+                AirflowEstimationManager airflowEstimationManager = new AirflowEstimationManager(OpenLoopFuelingLogFilterPreferences.getMinThrottleAnglePreference(), OpenLoopFuelingLogFilterPreferences.getMinRpmPreference(), OpenLoopFuelingLogFilterPreferences.getMinMe7PointsPreference(), OpenLoopFuelingLogFilterPreferences.getMinAfrPointsPreference(), OpenLoopFuelingLogFilterPreferences.getMaxAfrPreference(), PrimaryFuelingPreferences.getFuelInjectorSizePreference(), PrimaryFuelingPreferences.getNumFuelInjectorPreference(), PrimaryFuelingPreferences.getMethanolNozzleSizePreference(), PrimaryFuelingPreferences.getNumMethanolNozzlePreference());
                 airflowEstimationManager.estimate(me7LogMap, afrLogMap);
                 AirflowEstimation airflowEstimation = airflowEstimationManager.getAirflowEstimation();
 

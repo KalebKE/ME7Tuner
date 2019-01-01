@@ -22,7 +22,7 @@ public class PrimaryFuelingUiManager {
         tabbedPane.setTabPlacement(JTabbedPane.LEFT);
         tabbedPane.addTab("KRKTE", null, new KrkteInputUiManager().getKrktePanel(), "Primary Fueling");
         tabbedPane.addTab("MLHFM", null, new MlhfmUiManager().getMlhfmPanel(), "Voltage to Kg/Hr");
-        tabbedPane.addTab("ME7 Logs", null, new OpenLoopFuelingMe7LogUiManager().getMe7LogPanel(), "ME7 Logging");
+        tabbedPane.addTab("ME7 Logs", null, new PrimaryFuelingMe7LogUiManager().getMe7LogPanel(), "ME7 Logging");
         tabbedPane.addTab("Correction", null, new PrimaryFuelingCorrectionUiManager().getCorrectionPanel(), "Primary Fueling Correction");
 
         return tabbedPane;
