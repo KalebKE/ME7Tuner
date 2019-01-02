@@ -221,7 +221,7 @@ public class OpenLoopFuelingCorrectionUiManager {
         button.addActionListener(e -> {
             final JFileChooser fc = new JFileChooser();
 
-            int returnValue = fc.showOpenDialog(correctionPanel);
+            int returnValue = fc.showSaveDialog(correctionPanel);
 
             if (returnValue == JFileChooser.APPROVE_OPTION) {
                 File selectedFile = fc.getSelectedFile();

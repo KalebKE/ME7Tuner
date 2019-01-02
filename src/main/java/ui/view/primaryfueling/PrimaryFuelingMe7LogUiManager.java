@@ -15,9 +15,7 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import preferences.openloopfueling.OpenLoopFuelingLogFilterPreferences;
 import preferences.primaryfueling.PrimaryFuelingPreferences;
-import ui.view.openloopfueling.OpenLoopFuelingMe7LogFilterConfigPanel;
 import ui.viewmodel.openloopfueling.OpenLoopFuelingAfrLogViewModel;
 import ui.viewmodel.openloopfueling.OpenLoopFuelingAirflowViewModel;
 import ui.viewmodel.openloopfueling.OpenLoopFuelingMe7LogViewModel;
@@ -30,7 +28,7 @@ import java.util.List;
 import java.util.Map;
 
 
-public class PrimaryFuelingMe7LogUiManager {
+class PrimaryFuelingMe7LogUiManager {
 
     private static final int ME7_FUELING_DATA_SERIES_INDEX = 0;
     private static final int AFR_FUELING_AIRFLOW_DATA_SERIES_INDEX = 1;
@@ -264,11 +262,17 @@ public class PrimaryFuelingMe7LogUiManager {
             if (result == JOptionPane.OK_OPTION) {
                 for (PrimaryFuelingMe7LogFilterConfigPanel.FieldTitle fieldTitle :PrimaryFuelingMe7LogFilterConfigPanel.FieldTitle.values()) {
                     switch (fieldTitle) {
+                        case GASOLINE_GRAMS_PER_CUBIC_CENTIMETER:
+                            PrimaryFuelingPreferences.setGasolineGramsPerCubicCentimeterPreference(Double.valueOf(filterConfigPane.getFieldText(fieldTitle)));
+                            break;
                         case FUEL_INJECTOR_CC_MIN:
                            PrimaryFuelingPreferences.setFuelInjectorSizePreference(Integer.valueOf(filterConfigPane.getFieldText(fieldTitle)));
                             break;
                         case NUM_FUEL_INJECTORS:
                         PrimaryFuelingPreferences.setNumFuelInjectorPreference(Integer.valueOf(filterConfigPane.getFieldText(fieldTitle)));
+                            break;
+                        case METHANOL_GRAMS_PER_CUBIC_CENTIMETER:
+                            PrimaryFuelingPreferences.setMethanolGramsPerCubicCentimeterPreference(Double.valueOf(filterConfigPane.getFieldText(fieldTitle)));
                             break;
                         case METHANOL_NOZZLE_CC_MIN:
                             PrimaryFuelingPreferences.setMethanolNozzleSizePreference(Integer.valueOf(filterConfigPane.getFieldText(fieldTitle)));

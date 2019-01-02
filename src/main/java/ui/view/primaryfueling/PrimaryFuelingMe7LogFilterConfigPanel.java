@@ -10,12 +10,12 @@ import java.text.NumberFormat;
 import java.util.HashMap;
 import java.util.Map;
 
-public class PrimaryFuelingMe7LogFilterConfigPanel extends JPanel {
+class PrimaryFuelingMe7LogFilterConfigPanel extends JPanel {
     private static final Insets WEST_INSETS = new Insets(5, 0, 5, 5);
     private static final Insets EAST_INSETS = new Insets(5, 5, 5, 0);
 
     enum FieldTitle {
-        FUEL_INJECTOR_CC_MIN("Fuel Injector cc/min"), NUM_FUEL_INJECTORS("Fuel Injectors"), METHANOL_NOZZLE_CC_MIN("Methanol Nozzle cc/min"), NUM_METHANOL_NOZZLES("Methanol Nozzles");
+        GASOLINE_GRAMS_PER_CUBIC_CENTIMETER("Gasoline Grams per Cubic Centimeter"), FUEL_INJECTOR_CC_MIN("Fuel Injector cc/min"), NUM_FUEL_INJECTORS("Fuel Injectors"), METHANOL_GRAMS_PER_CUBIC_CENTIMETER("Methanol Grams per Cubic Centimeter"), METHANOL_NOZZLE_CC_MIN("Methanol Nozzle cc/min"), NUM_METHANOL_NOZZLES("Methanol Nozzles");
         private String title;
 
         FieldTitle(String title) {
@@ -35,21 +35,32 @@ public class PrimaryFuelingMe7LogFilterConfigPanel extends JPanel {
                 BorderFactory.createTitledBorder("Configure Open Loop Filter"),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)));
         GridBagConstraints gbc;
+
+        NumberFormat integerFormat = NumberFormat.getIntegerInstance();
+        NumberFormatter integerFormatter = new NumberFormatter(integerFormat);
+        integerFormatter.setValueClass(Integer.class);
+        integerFormatter.setAllowsInvalid(false);
+        integerFormatter.setMinimum(0);
+
+        DecimalFormat decimalFormat = new DecimalFormat("#.##");
+        NumberFormatter decimalFormatter = new NumberFormatter(decimalFormat);
+        decimalFormatter.setOverwriteMode(true);
+        decimalFormatter.setAllowsInvalid(true);
+        decimalFormatter.setMinimum(0d);
+
         for (int i = 0; i < FieldTitle.values().length; i++) {
             FieldTitle fieldTitle = FieldTitle.values()[i];
             gbc = createGbc(0, i);
             add(new JLabel(fieldTitle.getTitle() + ":", JLabel.LEFT), gbc);
             gbc = createGbc(1, i);
 
-            NumberFormat integerFormat = NumberFormat.getIntegerInstance();
-            NumberFormatter integerFormatter = new NumberFormatter(integerFormat);
-            integerFormatter.setValueClass(Integer.class);
-            integerFormatter.setAllowsInvalid(false);
-            integerFormatter.setMinimum(0);
-
             JFormattedTextField textField = null;
 
             switch (fieldTitle) {
+                case GASOLINE_GRAMS_PER_CUBIC_CENTIMETER:
+                    textField = new JFormattedTextField(decimalFormat);
+                    textField.setValue(PrimaryFuelingPreferences.getGasolineGramsPerCubicCentimeterPreference());
+                    break;
                 case FUEL_INJECTOR_CC_MIN:
                     textField = new JFormattedTextField(integerFormatter);
                     textField.setValue(PrimaryFuelingPreferences.getFuelInjectorSizePreference());
@@ -57,6 +68,10 @@ public class PrimaryFuelingMe7LogFilterConfigPanel extends JPanel {
                 case NUM_FUEL_INJECTORS:
                     textField = new JFormattedTextField(integerFormatter);
                     textField.setValue(PrimaryFuelingPreferences.getNumFuelInjectorPreference());
+                    break;
+                case METHANOL_GRAMS_PER_CUBIC_CENTIMETER:
+                    textField = new JFormattedTextField(decimalFormat);
+                    textField.setValue(PrimaryFuelingPreferences.getMethanolGramsPerCubicCentimeterPreference());
                     break;
                 case METHANOL_NOZZLE_CC_MIN:
                     textField = new JFormattedTextField(integerFormat);

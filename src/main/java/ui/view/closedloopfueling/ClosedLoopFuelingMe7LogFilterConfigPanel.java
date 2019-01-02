@@ -35,23 +35,24 @@ public class ClosedLoopFuelingMe7LogFilterConfigPanel extends JPanel {
                 BorderFactory.createTitledBorder("Configure Closed Loop Filter"),
                 BorderFactory.createEmptyBorder(5, 5, 5, 5)));
         GridBagConstraints gbc;
+
+        NumberFormat integerFormat = NumberFormat.getIntegerInstance();
+        NumberFormatter integerFormatter = new NumberFormatter(integerFormat);
+        integerFormatter.setValueClass(Integer.class);
+        integerFormatter.setAllowsInvalid(false);
+        integerFormatter.setMinimum(0);
+
+        DecimalFormat decimalFormat = new DecimalFormat("#.##");
+        NumberFormatter decimalFormatter = new NumberFormatter(decimalFormat);
+        decimalFormatter.setOverwriteMode(true);
+        decimalFormatter.setAllowsInvalid(true);
+        decimalFormatter.setMinimum(0d);
+
         for (int i = 0; i < FieldTitle.values().length; i++) {
             FieldTitle fieldTitle = FieldTitle.values()[i];
             gbc = createGbc(0, i);
             add(new JLabel(fieldTitle.getTitle() + ":", JLabel.LEFT), gbc);
             gbc = createGbc(1, i);
-
-            NumberFormat integerFormat = NumberFormat.getIntegerInstance();
-            NumberFormatter integerFormatter = new NumberFormatter(integerFormat);
-            integerFormatter.setValueClass(Integer.class);
-            integerFormatter.setAllowsInvalid(false);
-            integerFormatter.setMinimum(0);
-
-            DecimalFormat decimalFormat = new DecimalFormat("#.##");
-            NumberFormatter decimalFormatter = new NumberFormatter(decimalFormat);
-            decimalFormatter.setOverwriteMode(true);
-            decimalFormatter.setAllowsInvalid(true);
-            decimalFormatter.setMinimum(0d);
 
             JFormattedTextField textField = null;
 

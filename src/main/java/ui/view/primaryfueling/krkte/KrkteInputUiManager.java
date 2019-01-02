@@ -21,7 +21,7 @@ public class KrkteInputUiManager {
         c.gridy = 0;
         c.insets = new Insets(-32,0,0,0);
 
-        JLabel krkteTitle = new JLabel("KRKTE");
+        JLabel krkteTitle = new JLabel("Actual KRKTE");
         panel.add(krkteTitle, c);
 
         c.gridx = 0;

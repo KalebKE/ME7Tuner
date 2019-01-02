@@ -8,8 +8,6 @@ import model.openloopfueling.util.Me7LogUtil;
 import java.util.*;
 
 public class AirflowEstimationManager {
-    private static final double GASOLINE_GRAMS_PER_CC = 0.75;
-    private static final double METHANOL_GRAMS_PER_CC = 0.79;
 
     private final int minPointsMe7;
     private final int minPointsAfr;
@@ -27,15 +25,15 @@ public class AirflowEstimationManager {
 
     private AirflowEstimation airflowEstimation;
 
-    public AirflowEstimationManager(double minThrottleAngle, double minRpm, int minPointsMe7, int minPointsAfr, double maxAfr, double fuelInjectorCubicCentimetersPerMinute, double numFuelInjectors, double methanolInjectorCubicCentimetersPerMinute, double numMethanolInjectors) {
+    public AirflowEstimationManager(double minThrottleAngle, double minRpm, int minPointsMe7, int minPointsAfr, double maxAfr, double fuelInjectorCubicCentimetersPerMinute, double numFuelInjectors, double methanolInjectorCubicCentimetersPerMinute, double numMethanolInjectors, double gasolineGramsPerCubicCentimeter, double methanolGramsPerCubicCentimeter) {
         this.minThrottleAngle = minThrottleAngle;
         this.minRpm = minRpm;
         this.minPointsMe7 = minPointsMe7;
         this.minPointsAfr = minPointsAfr;
         this.maxAfr = maxAfr;
 
-        this.totalFuelFlowGramsPerMinute = fuelInjectorCubicCentimetersPerMinute *numFuelInjectors* GASOLINE_GRAMS_PER_CC;
-        this.totalMethanolFlowGramsPerMinute = methanolInjectorCubicCentimetersPerMinute *numMethanolInjectors* METHANOL_GRAMS_PER_CC;
+        this.totalFuelFlowGramsPerMinute = fuelInjectorCubicCentimetersPerMinute *numFuelInjectors* gasolineGramsPerCubicCentimeter;
+        this.totalMethanolFlowGramsPerMinute = methanolInjectorCubicCentimetersPerMinute *numMethanolInjectors* methanolGramsPerCubicCentimeter;
 
         this.estimatedAirflowGramsPerSecondLogs = new ArrayList<>();
         this.measuredAirflowGramsPerSecondLogs = new ArrayList<>();
