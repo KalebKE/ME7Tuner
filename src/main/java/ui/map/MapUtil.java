@@ -1,4 +1,4 @@
-package ui.table;
+package ui.map;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -6,8 +6,8 @@ import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.text.DecimalFormat;
 
-class MapUtil {
-    static void enforceTableColumnWidth(JTable table) {
+public class MapUtil {
+    public static void enforceTableColumnWidth(JTable table) {
         TableColumn column;
         for (int i = 0; i < table.getColumnModel().getColumnCount(); i++) {
             column = table.getColumnModel().getColumn(i);
@@ -20,7 +20,7 @@ class MapUtil {
         }
     }
 
-    static class DecimalFormatRenderer extends DefaultTableCellRenderer {
+    public static class DecimalFormatRenderer extends DefaultTableCellRenderer {
 
         private final DecimalFormat formatter = new DecimalFormat( "#.##" );
 

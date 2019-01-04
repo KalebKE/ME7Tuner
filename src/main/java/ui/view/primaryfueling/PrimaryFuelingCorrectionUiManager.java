@@ -11,7 +11,7 @@ import org.jfree.chart.plot.XYPlot;
 import org.jfree.chart.renderer.xy.XYLineAndShapeRenderer;
 import org.jfree.data.xy.XYSeries;
 import org.jfree.data.xy.XYSeriesCollection;
-import ui.table.MapTable;
+import ui.map.map.MapTable;
 import ui.view.primaryfueling.krkte.KrkteOutputUiManager;
 import ui.viewmodel.primaryfueling.PrimaryFuelingCorrectionViewModel;
 import writer.MlhfmWriter;

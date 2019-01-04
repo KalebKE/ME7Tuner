@@ -9,7 +9,7 @@ import java.awt.*;
 import java.text.DecimalFormat;
 
 
-public class KrkteCalculationManager {
+public class KrkteUiManager {
 
     private KrkteConstantsPanel krkteConstantsPanel;
     private JFormattedTextField outputTextField;

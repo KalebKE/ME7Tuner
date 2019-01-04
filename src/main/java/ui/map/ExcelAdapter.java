@@ -1,4 +1,4 @@
-package ui.table;
+package ui.map;
 
 import java.awt.*;
 import java.awt.event.*;

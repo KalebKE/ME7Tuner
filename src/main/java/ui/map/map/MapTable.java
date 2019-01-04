@@ -1,4 +1,7 @@
-package ui.table;
+package ui.map.map;
+
+import ui.map.ExcelAdapter;
+import ui.map.MapUtil;
 
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
@@ -54,7 +57,7 @@ public class MapTable extends JList implements TableModelListener {
     public Double[] getRowHeaders() { return rowHeaders; }
 
     /*
-     *  Use the table to implement the ListModel
+     *  Use the map to implement the ListModel
      */
     class TableListModel extends AbstractListModel {
         public int getSize() {
@@ -67,7 +70,7 @@ public class MapTable extends JList implements TableModelListener {
     }
 
     /*
-     *  Use the table row header properties to render each cell
+     *  Use the map row header properties to render each cell
      */
     class RowHeaderRenderer extends DefaultListCellRenderer {
         private DecimalFormat decimalFormat = new DecimalFormat("#.####");
