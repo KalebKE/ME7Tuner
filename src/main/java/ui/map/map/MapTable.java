@@ -1,7 +1,9 @@
 package ui.map.map;
 
+import io.reactivex.subjects.PublishSubject;
 import ui.map.ExcelAdapter;
 import ui.map.MapUtil;
+import util.Debouncer;
 
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
@@ -9,6 +11,7 @@ import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
 import java.awt.*;
 import java.text.DecimalFormat;
+import java.util.concurrent.TimeUnit;
 
 public class MapTable extends JList implements TableModelListener {
     private JTable table;
@@ -18,12 +21,18 @@ public class MapTable extends JList implements TableModelListener {
     private DefaultTableModel tableModel;
     private JScrollPane scrollPane;
 
+    private PublishSubject<Double[][]> publishSubject;
+    private Debouncer debouncer;
+
     @SuppressWarnings("unchecked")
     private MapTable(Double[] rowHeaders, Object[] columnHeaders, Double[][] data) {
         this.table = this.createTable(columnHeaders, data);
         this.rowHeaders = rowHeaders;
         this.columnHeaders = columnHeaders;
         this.data = data;
+        this.debouncer = new Debouncer();
+
+        this.publishSubject = PublishSubject.create();
 
         setAutoscrolls(false);
         setCellRenderer(new RowHeaderRenderer());
@@ -38,6 +47,10 @@ public class MapTable extends JList implements TableModelListener {
         scrollPane.setRowHeaderView(this);
         scrollPane.setMinimumSize(new Dimension(120, 100));
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
+    }
+
+    public PublishSubject<Double[][]> getPublishSubject() {
+        return publishSubject;
     }
 
     public void tableChanged(TableModelEvent e) {
@@ -57,7 +70,7 @@ public class MapTable extends JList implements TableModelListener {
     public Double[] getRowHeaders() { return rowHeaders; }
 
     /*
-     *  Use the map to implement the ListModel
+     *  Use the data to implement the ListModel
      */
     class TableListModel extends AbstractListModel {
         public int getSize() {
@@ -70,7 +83,7 @@ public class MapTable extends JList implements TableModelListener {
     }
 
     /*
-     *  Use the map row header properties to render each cell
+     *  Use the data row header properties to render each cell
      */
     class RowHeaderRenderer extends DefaultListCellRenderer {
         private DecimalFormat decimalFormat = new DecimalFormat("#.####");
@@ -157,6 +170,13 @@ public class MapTable extends JList implements TableModelListener {
                 }
 
                 MapTable.this.data = values;
+
+                debouncer.debounce(this, new Runnable() {
+                    @Override
+                    public void run() {
+                        publishSubject.onNext(values);
+                    }
+                }, 100, TimeUnit.MILLISECONDS);
             }
         });
 

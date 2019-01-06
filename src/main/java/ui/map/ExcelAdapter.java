@@ -24,10 +24,21 @@ public class ExcelAdapter implements ActionListener {
      */
     public ExcelAdapter(JTable myJTable) {
         jTable1 = myJTable;
-        KeyStroke copy = KeyStroke.getKeyStroke(KeyEvent.VK_C, ActionEvent.CTRL_MASK, false);
-        // Identifying the copy KeyStroke user can modify this
-        // to copy on some other Key combination.
-        KeyStroke paste = KeyStroke.getKeyStroke(KeyEvent.VK_V, ActionEvent.CTRL_MASK, false);
+
+        KeyStroke copy;
+        KeyStroke paste;
+
+        if(System.getProperty("os.name").toLowerCase().contains("mac")) {
+            copy = KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.META_DOWN_MASK, false);
+            // Identifying the copy KeyStroke user can modify this
+            // to copy on some other Key combination.
+            paste = KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.META_DOWN_MASK, false);
+        } else {
+            copy = KeyStroke.getKeyStroke(KeyEvent.VK_C, InputEvent.CTRL_DOWN_MASK, false);
+            // Identifying the copy KeyStroke user can modify this
+            // to copy on some other Key combination.
+            paste = KeyStroke.getKeyStroke(KeyEvent.VK_V, InputEvent.CTRL_DOWN_MASK, false);
+        }
         // Identifying the Paste KeyStroke user can modify this
         //to copy on some other Key combination.
         jTable1.registerKeyboardAction(this, "Copy", copy, JComponent.WHEN_FOCUSED);

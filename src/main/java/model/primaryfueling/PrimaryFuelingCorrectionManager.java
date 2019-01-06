@@ -72,8 +72,6 @@ public class PrimaryFuelingCorrectionManager {
 
         double finalCorrectionError = (mode+mean)/2;
 
-        System.out.println(finalCorrectionError);
-
         List<Double> airflowKgHr = mlhfm.get(MlhfmFileContract.KILOGRAM_PER_HOUR_HEADER);
         List<Double> correctedAirflowKgHr = new ArrayList<>();
 

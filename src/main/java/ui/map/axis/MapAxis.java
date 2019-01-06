@@ -8,6 +8,7 @@ import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
 import javax.swing.table.DefaultTableModel;
+import java.awt.*;
 
 public class MapAxis {
 
@@ -45,6 +46,7 @@ public class MapAxis {
         final JTable table = new JTable(tableModel);
         table.getTableHeader().setReorderingAllowed(false);
         table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        table.setGridColor(Color.BLACK);
 
         table.setTableHeader(null);
 
@@ -56,9 +58,6 @@ public class MapAxis {
         table.getModel().addTableModelListener(new TableModelListener() {
             public void tableChanged(TableModelEvent e) {
                 Double[][] values = new Double[MapAxis.this.data.length][];
-
-                System.out.println("Column: "  + table.getModel().getColumnCount());
-                System.out.println("Row: "  + table.getModel().getRowCount());
 
                 for(int i = 0; i < MapAxis.this.data.length; i++) {
                     values[i] = new Double[MapAxis.this.data[i].length];

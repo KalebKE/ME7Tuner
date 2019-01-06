@@ -1,6 +1,7 @@
 package ui.view;
 
 import ui.view.closedloopfueling.ClosedLoopFuelingUiManager;
+import ui.view.kfmiop.KfmiopUiManager;
 import ui.view.kfmirl.KfmirlUiManager;
 import ui.view.krkte.KrkteUiManager;
 import ui.view.openloopfueling.OpenLoopFuelingUiManager;
@@ -12,7 +13,7 @@ public class MainManager {
     public void start() {
         JFrame frame = new JFrame();
         frame.setTitle("MAF Scaler");
-        frame.setSize(1280, 800);
+        frame.setSize(1480, 800);
         frame.add(getTabbedPane());
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
@@ -24,7 +25,8 @@ public class MainManager {
         tabbedPane.addTab("Open Loop Fueling", null, new OpenLoopFuelingUiManager().getOpenLoopPanel(), "Open Loop Fueling Compensation");
         tabbedPane.addTab("Primary Fueling", null, new PrimaryFuelingUiManager().getPrimaryFuelingPanel(), "Primary Fueling Compensation");
         tabbedPane.addTab("KRKTE", null, new KrkteUiManager().getKrkteCalculationPanel(), "KRKTE Calculator");
-        tabbedPane.addTab("KFMIRL", null, new KfmirlUiManager().getKfmirlCalculationPanel(), "KRKTE Calculator");
+        tabbedPane.addTab("KFMIRL", null, new KfmirlUiManager().getKfmirlCalculationPanel(), "KFMIRL Calculator");
+        tabbedPane.addTab("KFMIOP", null, new KfmiopUiManager().getKfmiopCalculationPanel(), "KFMIOP Calculator");
 
         return tabbedPane;
     }
