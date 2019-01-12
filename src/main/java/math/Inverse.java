@@ -1,6 +1,5 @@
 package math;
 
-
 import math.map.Map;
 
 public class Inverse {

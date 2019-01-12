@@ -2,13 +2,15 @@ package ui.map.axis;
 
 
 import ui.map.ExcelAdapter;
-import ui.map.MapUtil;
 
 import javax.swing.*;
 import javax.swing.event.TableModelEvent;
 import javax.swing.event.TableModelListener;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
+import javax.swing.table.TableColumn;
 import java.awt.*;
+import java.text.DecimalFormat;
 
 public class MapAxis {
 
@@ -25,13 +27,12 @@ public class MapAxis {
         scrollPane = new JScrollPane(table);
     }
 
-
     public void setTableData(Double[][] data) {
         this.data = data;
 
         tableModel.setDataVector(this.data, new Double[data[0].length]);
 
-        MapUtil.enforceTableColumnWidth(this.table);
+        enforceTableColumnWidth(this.table);
     }
 
     private JTable createAxis(final Double[][] data) {
@@ -50,7 +51,7 @@ public class MapAxis {
 
         table.setTableHeader(null);
 
-        MapUtil.enforceTableColumnWidth(table);
+        enforceTableColumnWidth(table);
 
         // Handle Copy/Paste
         ExcelAdapter excelAdapter = new ExcelAdapter(table);
@@ -83,5 +84,35 @@ public class MapAxis {
 
     public static MapAxis getMapAxis(final Double[][] data) {
         return new MapAxis(data);
+    }
+
+    private void enforceTableColumnWidth(JTable table) {
+        TableColumn column;
+        for (int i = 0; i < table.getColumnModel().getColumnCount(); i++) {
+            column = table.getColumnModel().getColumn(i);
+            column.setPreferredWidth(50);
+            column.setMaxWidth(50);
+
+            DefaultTableCellRenderer centerRenderer = new DecimalFormatRenderer();
+            centerRenderer.setHorizontalAlignment( JLabel.CENTER );
+            column.setCellRenderer( centerRenderer );
+        }
+    }
+
+    private class DecimalFormatRenderer extends DefaultTableCellRenderer {
+
+        private final DecimalFormat formatter = new DecimalFormat( "#.##" );
+
+        public Component getTableCellRendererComponent(
+                JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+
+            if(value != null) {
+                value = formatter.format(value);
+            } else {
+                value = 0.0;
+            }
+            
+            return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column );
+        }
     }
 }

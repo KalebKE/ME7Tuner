@@ -126,7 +126,7 @@ public class KfmiopUiManager {
         c.anchor = GridBagConstraints.CENTER;
 
         JScrollPane scrollPane = kfmirl.getScrollPane();
-        scrollPane.setPreferredSize(new Dimension(650, 272));
+        scrollPane.setPreferredSize(new Dimension(715, 275));
 
         panel.add(scrollPane,c);
 
@@ -157,7 +157,7 @@ public class KfmiopUiManager {
         kfmiop = MapTable.getMapTable(Kfmiop.getStockKfmiopYAxis(), Kfmiop.getStockKfmiopXAxis(), Kfmiop.getStockKfmiopMap());
 
         JScrollPane kfmiopMapScrollPane = kfmiop.getScrollPane();
-        kfmiopMapScrollPane.setPreferredSize(new Dimension(650, 272));
+        kfmiopMapScrollPane.setPreferredSize(new Dimension(705, 275));
 
         mapPanel.add(kfmiopMapScrollPane,constraints);
 

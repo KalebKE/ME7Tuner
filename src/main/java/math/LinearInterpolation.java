@@ -21,7 +21,7 @@ public class LinearInterpolation {
         for (int i = 0; i < x.length - 1; i++) {
             dx[i] = x[i + 1] - x[i];
             if (dx[i] == 0) {
-               throw new IllegalArgumentException("X must be montotonic. A duplicate " + "x-value was found -> " + x[i]);
+                x[i + 1] += x[i + 1] * 0.01;
             }
             if (dx[i] < 0) {
                 System.out.println(Arrays.toString(x));

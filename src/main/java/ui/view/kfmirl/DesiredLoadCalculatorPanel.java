@@ -174,7 +174,7 @@ class DesiredLoadCalculatorPanel extends JPanel {
         double kfurl = Double.parseDouble(getFieldText(FieldTitle.KFURL));
         double maximumBoost = Integer.parseInt(getFieldText(FieldTitle.MAX_DESIRED_BOOST));
         // Give it some headroom
-        double maximumSpecifiedLoad = ((maximumBoost - 300)*kfurl)*1.21;
+        double maximumSpecifiedLoad = ((maximumBoost - 300)*kfurl)*1.2;
         fieldMap.get(FieldTitle.MAX_DESIRED_LOAD).setValue(maximumSpecifiedLoad);
     }
 
