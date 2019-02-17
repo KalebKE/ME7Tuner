@@ -5,7 +5,6 @@ import ui.view.kfmiop.KfmiopUiManager;
 import ui.view.kfmirl.KfmirlUiManager;
 import ui.view.krkte.KrkteUiManager;
 import ui.view.openloopfueling.OpenLoopFuelingUiManager;
-import ui.view.primaryfueling.PrimaryFuelingUiManager;
 
 import javax.swing.*;
 
@@ -23,7 +22,6 @@ public class MainManager {
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.addTab("Closed Loop Fueling", null, new ClosedLoopFuelingUiManager().getClosedLoopPanel(), "Closed Loop Fueling Compensation");
         tabbedPane.addTab("Open Loop Fueling", null, new OpenLoopFuelingUiManager().getOpenLoopPanel(), "Open Loop Fueling Compensation");
-        tabbedPane.addTab("Primary Fueling", null, new PrimaryFuelingUiManager().getPrimaryFuelingPanel(), "Primary Fueling Compensation");
         tabbedPane.addTab("KRKTE", null, new KrkteUiManager().getKrkteCalculationPanel(), "KRKTE Calculator");
         tabbedPane.addTab("KFMIRL", null, new KfmirlUiManager().getKfmirlCalculationPanel(), "KFMIRL Calculator");
         tabbedPane.addTab("KFMIOP", null, new KfmiopUiManager().getKfmiopCalculationPanel(), "KFMIOP Calculator");

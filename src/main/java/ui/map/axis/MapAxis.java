@@ -111,7 +111,7 @@ public class MapAxis {
             } else {
                 value = 0.0;
             }
-            
+
             return super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column );
         }
     }
