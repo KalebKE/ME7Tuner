@@ -284,11 +284,7 @@ public class ClosedLoopMlhfmCorrectionUiManager {
                 File selectedFile = fc.getSelectedFile();
 
                 MlhfmWriter mlhfmWriter = new MlhfmWriter();
-                if(closedLoopMlhfmCorrection.fitMlhfm != null) {
-                    mlhfmWriter.write(selectedFile, closedLoopMlhfmCorrection.fitMlhfm);
-                } else {
-                    mlhfmWriter.write(selectedFile, closedLoopMlhfmCorrection.correctedMlhfm);
-                }
+                mlhfmWriter.write(selectedFile, closedLoopMlhfmCorrection.correctedMlhfm);
             }
         });
 
@@ -336,7 +332,6 @@ public class ClosedLoopMlhfmCorrectionUiManager {
             @Override
             public void actionPerformed(ActionEvent e) {
                 Map2d correctedFitMlhfm = MlhfmFitter.fitMlhfm(closedLoopMlhfmCorrection.correctedMlhfm, polynomialDegree);
-                closedLoopMlhfmCorrection = new ClosedLoopMlhfmCorrection(closedLoopMlhfmCorrection.inputMlhfm, closedLoopMlhfmCorrection.correctedMlhfm, correctedFitMlhfm, closedLoopMlhfmCorrection.filteredVoltageDt, closedLoopMlhfmCorrection.correctionsAfrMap, closedLoopMlhfmCorrection.meanAfrMap, closedLoopMlhfmCorrection.modeAfrMap, closedLoopMlhfmCorrection.correctedAfrMap);
                 drawMlhfmChart(closedLoopMlhfmCorrection.inputMlhfm, correctedFitMlhfm);
                 drawMapTable(correctedFitMlhfm);
             }

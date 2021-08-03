@@ -62,7 +62,7 @@ public class ClosedLoopMlhfmCorrectionManager {
 
         applyCorrections(correctionErrorList, mlhfm);
 
-        closedLoopMlhfmCorrection = new ClosedLoopMlhfmCorrection(mlhfm, correctedMlhfm, null, filteredVoltageDt, correctionsAfrMap, meanAfrMap, modeAfrMap, correctedAfrMap);
+        closedLoopMlhfmCorrection = new ClosedLoopMlhfmCorrection(mlhfm, correctedMlhfm, filteredVoltageDt, correctionsAfrMap, meanAfrMap, modeAfrMap, correctedAfrMap);
     }
 
     private void calculateCorrections(Map<Double, List<Double>> correctionError, Map<String, List<Double>> me7LogMap, Map2d mlhfm) {
@@ -197,7 +197,7 @@ public class ClosedLoopMlhfmCorrectionManager {
             double oldKgPerHourValue = oldKgPerHour.get(i);
             double totalCorrectionErrorValue = totalCorrectionError.get(voltage.get(i));
 
-            newKgPerHour.add(i, oldKgPerHourValue * ((totalCorrectionErrorValue) + 1));
+            newKgPerHour.add(i, (oldKgPerHourValue - 200) * ((totalCorrectionErrorValue) + 1)+200);
         }
 
         correctedMlhfm.data = newKgPerHour.toArray(new Double[0]);
