@@ -13,7 +13,7 @@ permissions:
 jobs:
   verify-source:
     name: Verify stable release source
-    runs-on: ubuntu-latest
+    runs-on: [light]
     steps:
       - name: Require master branch
         env:
@@ -24,7 +24,7 @@ jobs:
   determine-runner:
     name: Determine Runner
     needs: verify-source
-    runs-on: ubuntu-latest
+    runs-on: [light]
     outputs:
       runner-type: ${{ steps.select.outputs.runner }}
     steps:
@@ -34,24 +34,32 @@ jobs:
           GH_PAT_WORKFLOW: ${{ secrets.GH_PAT_WORKFLOW }}
         run: |
           set -euo pipefail
+          # Queue on the self-hosted Apple Silicon runners even when they are busy; hosted
+          # macOS (10x billing) only when none is online at all. `apple-silicon` because the
+          # artifact is named macos-aarch64 and the Intel Mac Pros also carry `macOS`;
+          # `docker` narrows it to the Mac Studios, which every repo can use.
+          SELF='["self-hosted", "macOS", "apple-silicon", "docker"]'
           FALLBACK='"macos-latest"'
           if [ -z "${GH_PAT_WORKFLOW:-}" ]; then
-            echo "::notice::GH_PAT_WORKFLOW not configured for runner lookup — falling back to hosted macOS"
-            echo "runner=$FALLBACK" >> "$GITHUB_OUTPUT"; exit 0
+            echo "::notice::GH_PAT_WORKFLOW not configured for runner lookup — queueing on self-hosted"
+            echo "runner=$SELF" >> "$GITHUB_OUTPUT"; exit 0
           fi
-          JSON=$(curl -s -H "Authorization: Bearer $GH_PAT_WORKFLOW" -H "Accept: application/vnd.github+json" \
-            "https://api.github.com/orgs/${{ github.repository_owner }}/actions/runners?per_page=100" || true)
-          IDLE=$(echo "$JSON" | jq '[.runners[]? | select(.os=="macOS" and .status=="online" and .busy==false)] | length' 2>/dev/null || echo 0)
-          if [ "${IDLE:-0}" -gt 0 ]; then
-            echo 'runner=["self-hosted", "macOS"]' >> "$GITHUB_OUTPUT"
-            echo "Idle self-hosted macOS runner available — using self-hosted (fill local before paying for hosted)"
+          if ! JSON=$(curl -sf -H "Authorization: Bearer $GH_PAT_WORKFLOW" -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/orgs/${{ github.repository_owner }}/actions/runners?per_page=100"); then
+            echo "::notice::Runner lookup failed — queueing on self-hosted"
+            echo "runner=$SELF" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          ONLINE=$(echo "$JSON" | jq '[.runners[]? | select(.status=="online" and ([.labels[].name] | index("self-hosted") and index("apple-silicon") and index("docker")))] | length' 2>/dev/null || echo 0)
+          if [ "${ONLINE:-0}" -gt 0 ]; then
+            echo "runner=$SELF" >> "$GITHUB_OUTPUT"
+            echo "$ONLINE self-hosted Apple Silicon runner(s) online — using self-hosted (queues when busy)"
           else
-            echo "::notice::No idle self-hosted macOS runner — using hosted fallback"
+            echo "::notice::No self-hosted Apple Silicon runner online — using hosted fallback"
             echo "runner=$FALLBACK" >> "$GITHUB_OUTPUT"
           fi
   test:
     needs: verify-source
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, macOS, apple-silicon, docker]
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
@@ -63,7 +71,7 @@ jobs:
       - uses: gradle/actions/setup-gradle@0b6dd653ba04f4f93bf581ec31e66cbd7dcb644d # v4
 
       - name: Run tests
-        run: xvfb-run -a ./gradlew test
+        run: ./gradlew test
 
       - name: Upload test results
         if: always()
@@ -80,7 +88,7 @@ jobs:
 
   check-version:
     needs: verify-source
-    runs-on: ubuntu-latest
+    runs-on: [light]
     outputs:
       version: ${{ steps.version.outputs.version }}
     steps:
@@ -140,6 +148,7 @@ jobs:
 
   build-windows:
     needs: [check-version, test, internal-fixture-test]
+    # Stays hosted: Windows MSI/ZIP, and there is no self-hosted Windows runner.
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -178,6 +187,7 @@ jobs:
 
   build-linux:
     needs: [check-version, test, internal-fixture-test]
+    # Stays hosted: Linux-native DEB/tar.gz, and there is no self-hosted Linux runner.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
@@ -210,7 +220,7 @@ jobs:
 
   release:
     needs: [check-version, build-macos, build-windows, build-linux]
-    runs-on: ubuntu-latest
+    runs-on: [light]
     permissions:
       contents: write
     steps:

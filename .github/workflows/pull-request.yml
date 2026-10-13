@@ -15,7 +15,10 @@ permissions:
 jobs:
   test:
     name: Regression suite (${{ matrix.os }})
-    runs-on: ${{ matrix.os }}
+    # The macOS leg runs on the self-hosted Mac Studios (hosted macOS bills at 10x). The
+    # matrix value stays `macos-latest` so the job name does not change. Linux and Windows
+    # stay hosted: they are the platform coverage, and there are no such self-hosted runners.
+    runs-on: ${{ matrix.os == 'macos-latest' && fromJSON('["self-hosted", "macOS", "apple-silicon", "docker"]') || matrix.os }}
     timeout-minutes: 45
     strategy:
       fail-fast: false
@@ -52,7 +55,7 @@ jobs:
     name: Required PR Gate
     if: always()
     needs: test
-    runs-on: ubuntu-latest
+    runs-on: [light]
     steps:
       - name: Require every platform suite to pass
         env:
